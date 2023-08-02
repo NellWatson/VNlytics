@@ -3,6 +3,7 @@ import path from "path";
 import dotEnv from "dotenv";
 import express from "express";
 import { fileURLToPath } from 'url';
+import connectToDatabase from "./database.js";
 import morganMiddleware from "./middlewares/morgan.middleware.js";
 
 // Initialise exress
@@ -30,6 +31,9 @@ app.set("json spaces", 4);
 
 // Where should we look for the static files
 app.use(express.static(path.join(__dirname, "../public")));
+
+// Connect to database
+connectToDatabase();
 
 // Custom Error handling
 app.use(function(req, res) {
