@@ -1,0 +1,25 @@
+{
+  "name": "vnlytics",
+  "version": "0.1.0",
+  "description": "VNlytics is a narrative analytics system for story based games.  It enables player choices to be recorded for developer analysis, or additionally returned to the player, to compare their choices with others.",
+  "main": "app.js",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development nodemon app.js",
+    "prod": "cross-env NODE_ENV=production nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Dipesh Aggarwal",
+  "license": "BSD",
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.4.1",
+    "morgan": "^1.10.0",
+    "winston": "^3.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
