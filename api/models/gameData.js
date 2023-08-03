@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-var gameDataSchema = mongoose.Schema({
+const gameDataSchema = mongoose.Schema({
     project_id: {
         type: String,
         required: true

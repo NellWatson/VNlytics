@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url';
 import connectToDatabase from "./database.js";
 import morganMiddleware from "./middlewares/morgan.middleware.js";
 
+import router from "./controllers/index.js";
+
 // Initialise exress
 const app = express();
 
@@ -32,17 +34,20 @@ app.set("json spaces", 4);
 // Where should we look for the static files
 app.use(express.static(path.join(__dirname, "../public")));
 
+//Load the different routes
+app.use(router);
+
 // Connect to database
 connectToDatabase();
 
 // Custom Error handling
-app.use(function(req, res) {
+app.use((req, res) => {
    res.status(404).json({
       type: "error",
       message: "404: Page not Found"});
 });
 
-app.use(function(error, req, res, next) {
+app.use((error, req, res, next) => {
    res.status(500).json({
       type: "error",
       message: "500: Internal Server Error"});

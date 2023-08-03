@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import logger from "../utils/logger.js";
 
-var projectSchema = mongoose.Schema({
+const projectSchema = mongoose.Schema({
     project_id: {
         type: String,
         required: true,
@@ -36,25 +37,35 @@ var projectSchema = mongoose.Schema({
     }
 });
 
-var ProjectsData = mongoose.model("projectsData", projectSchema);
+var ProjectsData = mongoose.model("ProjectsData", projectSchema);
 
-export default ProjectsData;
-
-export const addProject = (project, callback) => {
-    ProjectsData.create(project, callback);
+export const addProject = async (project) => {
+    try {
+        await ProjectsData.create(project);
+    } catch (err) {
+        if (err.name == "MongoServerError" && err.code == 11000) {
+            return { type: "error", message: "Project with this ID already exists!" };
+        }
+        logger.error(err);
+    }
+    
 };
 
-export const getData = (callback, limit) => {
-    ProjectsData.find(callback).limit(limit);
+export const getData = async (query, limit) => {
+    const projects = await ProjectsData.find(query).limit(limit);
+
+    return projects
 };
 
-export const updateData = (projectId, updatedObj, options, callback) => {
+export const updateData = async (projectId, updatedObj, options, callback) => {
     var query = {project_id: projectId};
     var update = {$set: updatedObj};
 
-    ProjectsData.findOneAndUpdate(query, update, options, callback);
+    await ProjectsData.findOneAndUpdate(query, update, options, callback);
 };
 
-export const byId = (query, callback) => {
-    ProjectsData.findOne(query, callback);
+export const byId = async (query, callback) => {
+    await ProjectsData.findOne(query, callback);
 };
+
+export default ProjectsData;
