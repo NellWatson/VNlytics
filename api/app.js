@@ -8,7 +8,7 @@ import morganMiddleware from "./middlewares/morgan.middleware.js";
 
 import router from "./controllers/index.js";
 
-// Initialise exress
+// Initialise express
 const app = express();
 
 // Initialise dotEnv;
