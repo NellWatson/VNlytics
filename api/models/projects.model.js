@@ -37,7 +37,8 @@ const projectSchema = mongoose.Schema({
     }
 });
 
-var ProjectsData = mongoose.model("ProjectsData", projectSchema);
+const ProjectsData = mongoose.model("ProjectsData", projectSchema);
+const debugVisible = process.env.NODE_ENV === "development" ? 1 : 0;
 
 export const addProject = async (project) => {
     try {
@@ -56,7 +57,7 @@ export const addProject = async (project) => {
 
 export const getData = async (query) => {
     try {
-        const projects = await ProjectsData.find(query).select({ _id: 0, project_id: 0, __v: 0 });
+        const projects = await ProjectsData.find(query).select({ _id: debugVisible, project_id: debugVisible, title: 1, developer: 1, engine: 1, __v: debugVisible });
         return { type: "success", data: projects };
 
     } catch (err) {
@@ -72,7 +73,17 @@ export const updateData = async (projectId, updatedObj, options) => {
 };
 
 export const byId = async (query) => {
-    await ProjectsData.findOne(query);
+    try {
+        const doc = await ProjectsData.findOne(query);
+        
+        if (doc === null) {
+            return { type: "failure", message: query.project_id + " Project does not exist." };
+        } else {
+            return { type: "success", message: doc.title + " Project exists." };
+        }
+    } catch (err) {
+        logger.error(err.name + ": " + err.message);
+    };
 };
 
 export const countTotalProjects = async () => {

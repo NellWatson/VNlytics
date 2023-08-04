@@ -91,7 +91,7 @@ const gameDataSchema = mongoose.Schema({
     ]
 });
 
-var GameData = mongoose.model("gameData", gameDataSchema);
+const GameData = mongoose.model("gameData", gameDataSchema);
 
 const createPipeline = (field, query) => {
     if ( field === "choices" ) {

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import connectToDatabase from "./database.js";
 import morganMiddleware from "./middlewares/morgan.middleware.js";
 
-import router from "./controllers/index.js";
+import router from "./routes/index.route.js";
 
 // Initialise express
 const app = express();

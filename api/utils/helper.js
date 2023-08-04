@@ -1,5 +1,5 @@
 // This function strips out all the unwanted entries from postData
-helperFunctions = {
+const helperFunctions = {
     validatePost: function(allowedKeys, postData) {
         var _temp = {};
 

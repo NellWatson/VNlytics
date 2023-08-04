@@ -1,6 +1,6 @@
 // Loading the modules
 import { Router } from "express";
-import v1 from "./v1/index.js";
+import v1 from "./v1/index.route.js";
 
 // Initialise the router
 const router = Router();
