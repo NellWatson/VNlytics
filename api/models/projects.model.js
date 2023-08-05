@@ -57,7 +57,7 @@ export const addProject = async (project) => {
 
 export const getData = async (query) => {
     try {
-        const projects = await ProjectsData.find(query).select({ _id: debugVisible, project_id: debugVisible, title: 1, developer: 1, engine: 1, __v: debugVisible });
+        const projects = await ProjectsData.find(query).select({ _id: debugVisible, project_id: debugVisible, title: 1, description: 1, developer: 1, engine: 1, __v: debugVisible });
         return { type: "success", data: projects };
 
     } catch (err) {
@@ -65,11 +65,22 @@ export const getData = async (query) => {
     };
 };
 
-export const updateData = async (projectId, updatedObj, options) => {
-    var query = {project_id: projectId};
-    var update = {$set: updatedObj};
+export const updateData = async (projectId, updatedObj) => {
+    const query = { project_id: projectId };
+    const update = { $set: updatedObj };
 
-    await ProjectsData.findOneAndUpdate(query, update, options);
+    try {
+        const doc = await ProjectsData.findOneAndUpdate(query, update, { new: true });
+        
+        if (doc === null) {
+            return { type: "failure", message: query.project_id + " Project does not exist." };
+        } else {
+            return { type: "success", message: doc.title + " Project has been updated." };
+        }
+    } catch (err) {
+        logger.error(err.name + ": " + err.message);
+    }
+    
 };
 
 export const byId = async (query) => {

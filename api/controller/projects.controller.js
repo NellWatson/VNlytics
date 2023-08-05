@@ -1,11 +1,66 @@
 // Load the models
-import { addProject, byId, getData, countTotalProjects } from "../models/projects.model.js";
+import { addProject, byId, countTotalProjects, getData, updateData } from "../models/projects.model.js";
+import { aggregateData } from "../models/game_data.model.js";
+
+// Load helper function
+import helper from "../utils/helper.js";
+
+// Load constants
+import CONSTANT from "../utils/constants.js";
 
 export const invalidProjectId = (req, res) => {
     res.status(400).json({
         type: "failure",
         message: "Please provide a valid Project ID."
     });
+};
+
+export const createNewProject = async (req, res) => {
+    const project = req.body;
+
+    if (req.header("Create-Project-Auth") != process.env.CREATE_NEW_PROJECT_KEY) {
+        res.status(400).json({
+            type: "failure",
+            message: "Contact admin for the correct auth key."
+        });
+    };
+    
+    const data = await addProject(project);
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else {
+        res.status(200).json(data);
+    };
+};
+
+export const updateProject = async (req, res) => {
+    const projectId = req.params._projectId;
+    const updatedObj = helper.validatePost( CONSTANT.projectUpdatableFields, req.body );
+
+    if (req.header("Create-Project-Auth") != process.env.CREATE_NEW_PROJECT_KEY) {
+        res.status(400).json({
+            type: "failure",
+            message: "Contact admin for the correct auth key."
+        });
+    };
+
+    if (helper.isEmpty(updatedObj)) {
+        res.status(400).json({
+            type: "failure",
+            message: "Please send data to be updated with your request."
+        });
+    };
+
+    const data = await updateData(projectId, updatedObj)
+
+    if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
 };
 
 export const countAllProjects = async (req, res) => {
@@ -29,23 +84,27 @@ export const getOneProject = async (req, res) => {
     };
 };
 
-export const createNewProject = async (req, res) => {
-    const project = req.body;
+export const getAllPlatformCount = async (req, res) => {
+    const query = { project_id: req.params._projectId };
+    const field = "platform";
+    
+    req.query = helper.sanitise(req.query);
 
-    if (req.header("Create-Project-Auth") != process.env.CREATE_NEW_PROJECT_KEY) {
-        res.status(400).json({
-            type: "failure",
-            message: "Contact admin for the correct auth key."
-        });
+    if ( "unique" in req.query ) {
+        query.multiple_ids = false;
     };
     
-    const data = await addProject(project);
-
-    if (data.type === "error") {
-        res.status(500).json(data);
-    } else if (data.type === "failure") {
-        res.status(400).json(data);
-    } else {
-        res.status(200).json(data);
+    if ( "resolution" in req.query ) {
+        if ( req.query.resolution === "full hd" ) {
+            query.display_size = "(1920, 1080)";
+        } else if ( req.query.resolution === "hd" ) {
+            query.display_size = "(1280, 720)";
+        } else {
+            query.display_size = req.query.resolution;
+        }
     };
-};
+
+    aggregateData( field, query, function(err, doc) {
+        res.send(doc);
+    })
+}

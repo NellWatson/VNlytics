@@ -13,7 +13,7 @@ const v1 = Router();
 
 v1.use("/:_projectId", (req, res, next) => {
     // Store the value of project id
-    req._projectId = req.params._projectId;
+    req.projectId = req.params.projectId;
     next();
 });
 
