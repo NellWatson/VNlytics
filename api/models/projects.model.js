@@ -52,6 +52,7 @@ export const addProject = async (project) => {
             return { type: "failure", message: "Required parameters are not provided for creating a new project." };
         };
         logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
     }
 };
 
@@ -62,6 +63,7 @@ export const getData = async (query) => {
 
     } catch (err) {
         logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
     };
 };
 
@@ -81,6 +83,7 @@ export const updateData = async (query, updatedObj) => {
             return { type: "failure", message: "An invalid ID was provided." };
         };
         logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
     }
     
 };
@@ -96,6 +99,7 @@ export const deleteData = async () => {
         }
     } catch (err) {
         logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
     }
 }
 
@@ -110,6 +114,7 @@ export const byId = async (query) => {
         }
     } catch (err) {
         logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
     };
 };
 
@@ -128,6 +133,7 @@ export const countTotalProjects = async () => {
         return { type: "success", message: str_value + " registered with the site.", data: value }
     } catch (err) {
         logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
     }
 }
 

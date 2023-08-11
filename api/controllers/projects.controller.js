@@ -60,7 +60,9 @@ export const updateProject = async (req, res) => {
 
     const data = await updateData(query, updatedObj);
 
-    if (data.type === "failure") {
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
         res.status(400).json(data);
     } else if ( data.type === "success" ) {
         res.status(200).json(data);
@@ -84,7 +86,9 @@ export const deleteAllProjects = async (req, res) => {
 
     const data = await deleteData();
 
-    if (data.type === "failure") {
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
         res.status(400).json(data);
     } else if ( data.type === "success" ) {
         res.status(200).json(data);
@@ -105,7 +109,9 @@ export const getOneProject = async (req, res) => {
     const _projectId = req.params._projectId;
     const data = await byId( { project_id: _projectId });
 
-    if (data.type === "failure") {
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
         res.status(400).json(data);
     } else if ( data.type === "success" ) {
         res.status(200).json(data);
