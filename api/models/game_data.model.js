@@ -282,8 +282,19 @@ const createPipeline = (field, query) => {
 export default GameData;
 
 // Intialise Game ID
-export const addGameId = (gameDataObj, callback) => {
-    GameData.create(gameDataObj, callback);
+export const addGameId = async (gameDataObj, callback) => {
+    try {
+        const doc = await GameData.create(gameDataObj);
+        return { type: "success", message: "Game Instance was successfully created.", data: { _id: doc._id, project_id: doc.project_id } };
+
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return { type: "failure", message: "Required parameters are not provided for creating a new project." };
+        };
+
+        logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
+    }
 };
 
 export const getData = (callback, limit) => {

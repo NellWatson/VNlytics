@@ -3,6 +3,7 @@ import path from "path";
 import dotEnv from "dotenv";
 import express from "express";
 import { fileURLToPath } from 'url';
+import mongoSanitize from "express-mongo-sanitize";
 import connectToDatabase from "./database.js";
 import morganMiddleware from "./middlewares/morgan.middleware.js";
 
@@ -25,6 +26,13 @@ const PORT = process.env.PORT || 1313;
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+app.use(
+    mongoSanitize({
+        allowDots: true,
+        replaceWith: '_',
+    }),
+);
+
 // Add the morgan middleware
 app.use(morganMiddleware);
 
@@ -42,27 +50,27 @@ connectToDatabase();
 
 // Custom Error handling
 app.use((req, res) => {
-   res.status(404).json({
-      type: "error",
-      message: "404: Page not Found"});
+    res.status(404).json({
+        type: "error",
+        message: "404: Page not Found"});
 });
 
 app.use((error, req, res, next) => {
-   if (error.name === "SyntaxError" && error.status === 400 && error.type === "entity.parse.failed") {
-      return res.status(403).json({
-         type: "error",
-         message: "The JSON request is malformed."
-      })
-   };
+    if (error.name === "SyntaxError" && error.status === 400 && error.type === "entity.parse.failed") {
+        return res.status(403).json({
+            type: "error",
+            message: "The JSON request is malformed."
+        })
+    };
 
-   res.status(500).json({
-      type: "error",
-      message: "500: Internal Server Error"});
+    res.status(500).json({
+        type: "error",
+        message: "500: Internal Server Error"});
 });
 
 // Start the server
 app.listen(PORT, () => {
-   console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
 
 // Export for test

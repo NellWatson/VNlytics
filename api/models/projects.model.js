@@ -43,8 +43,8 @@ const debugVisible = process.env.NODE_ENV === "development" ? 1 : 0;
 export const addProject = async (project) => {
     try {
         const doc = await ProjectsData.create(project);
-
         return { type: "success", message: "Project was successfully created.", data: { _id: doc._id, project_id: doc.project_id } };
+        
     } catch (err) {
         if (err.name == "MongoServerError" && err.code == 11000) {
             return { type: "failure", message: "Project with this ID already exists!" };

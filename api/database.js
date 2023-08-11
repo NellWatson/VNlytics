@@ -4,6 +4,7 @@ import logger from "./utils/logger.js";
 
 let mongod = null;
 
+mongoose.set('sanitizeFilter', true);
 const connectToDatabase = async () => {
     let dbUrl = `mongodb://${process.env.DATABASE_USER}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_URL}?authMechanism=DEFAULT&authSource=${process.env.DATABASE_SOURCE}`
     

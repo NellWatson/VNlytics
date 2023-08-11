@@ -7,9 +7,6 @@ import GameData from "../../models/game_data.model.js";
 // Load controller
 import { createNewProject, deleteAllProjects, getAllPlatformCount, getOneProject, invalidProjectId, updateProject } from "../../controllers/projects.controller.js";
 
-// Load helper function
-import helper from "../../utils/helper.js";
-
 // Initialise the router
 const v1 = Router();
 
@@ -66,7 +63,6 @@ v1.get("/:_projectId/player", async (req, res) => {
 v1.get("/:_projectId/:_queryKey", async (req, res) => {
     var _field = req.params._queryKey;
     
-    req.query = helper.sanitise(req.query);
     req.query.project_id = req.params._projectId;
 
     GameData.aggregateData( _field, req.query, function (err, project) {

@@ -23,8 +23,8 @@ const helperFunctions = {
         return obj === Object(obj);
     },
 
-    documentExists: function(collection, query) {
-        return collection.count( query ).exec();
+    documentExists: async (collection, query) => {
+        return await collection.countDocuments(query);
     },
 
     getDistinct: function(collection, query) {

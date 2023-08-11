@@ -1,12 +1,8 @@
 // Load modules
 import { Router } from "express";
 
-// Load the models
-import ProjectsData from "../../models/projects.model.js";
-import GameData from "../../models/game_data.model.js";
-
-// Load helper function
-import helper from "../../utils/helper.js";
+// Load controller
+import { addNewGameId } from "../../controllers/game_data.controller.js";
 
 // Initialise the router
 const v1 = Router();
@@ -35,42 +31,10 @@ v1.get("/:_gameId", function(req, res) {
 });
 
 // Create a new Game ID.
-v1.post("/", function(req, res) {
-
-    // If the project_id isn't provided, return with an error.
-    if ( !("project_id" in req.body) ) {
-        return res.send("You need to provide Project ID");
-    }
-
-    // Check if the Project ID is in the file.
-    helper.documentExists( ProjectsData, {project_id: req.body.project_id} )
-        .then(function(c) {
-            if ( c == 0 ) {
-                return res.send("The provided Project Id does not exist in our database.");
-            } else {
-                
-                var gameDataObj = helper.sanitise(req.body);
-                
-                GameData.addGameId( gameDataObj, function (err, doc) {
-
-                    if (err) {
-                        if ( err.name == "ValidationError" ) {
-                            return res.send("Please send all the required details.");
-                        } else if ( err.name == "MongoError" && err.code == 11000 ) {
-                            return res.send("Please provide a unique game ID");
-                        }
-                        throw err;
-                    };
-
-                    res.send(doc._id);
-                })
-            };
-        });
-});
+v1.post("/", addNewGameId);
 
 v1.post("/:_gameId", function(req, res) {
     var _gameId = req.params._gameId;
-    var postObj = helper.sanitise(req.body);
 
     helper.documentExists( GameData, { _id: _gameId } )
         .then(function(c) {
