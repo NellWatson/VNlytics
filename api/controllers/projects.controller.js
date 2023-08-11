@@ -19,7 +19,7 @@ export const createNewProject = async (req, res) => {
     const project = req.body;
 
     if (req.header("Create-Project-Auth") != process.env.CREATE_NEW_PROJECT_KEY) {
-        res.status(400).json({
+        return res.status(400).json({
             type: "failure",
             message: "Contact admin for the correct auth key."
         });
@@ -45,14 +45,14 @@ export const updateProject = async (req, res) => {
     const updatedObj = helper.validatePost( CONSTANT.projectUpdatableFields, req.body );
 
     if (query._id === null || query._id === undefined) {
-        res.status(400).json({
+        return res.status(400).json({
             type: "failure",
             message: "Please provide ID of the project."
         });
     };
 
     if (helper.isEmpty(updatedObj)) {
-        res.status(400).json({
+        return res.status(400).json({
             type: "failure",
             message: "Please send data to be updated with your request."
         });
@@ -69,14 +69,14 @@ export const updateProject = async (req, res) => {
 
 export const deleteAllProjects = async (req, res) => {
     if (process.env.NODE_ENV != "test") {
-        res.status(400).json({
+        return res.status(400).json({
             type: "failure",
             message: "Projects can only be deleted in test environment."
         })
     };
 
     if (req.header("Delete-Project-Auth") != process.env.DELETE_PROJECT_KEY) {
-        res.status(400).json({
+        return res.status(400).json({
             type: "failure",
             message: "Contact admin for the correct auth key."
         });

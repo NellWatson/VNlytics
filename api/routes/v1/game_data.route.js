@@ -15,25 +15,6 @@ const v1 = Router();
 v1.get("/:_gameId", function(req, res) {
     var _gameId = req.params._gameId;
 
-    GameData.byId( { _id: _gameId }, function (err, doc) {
-        
-        if (err) {
-            throw err;
-        };
-
-        // Check whether the Game ID exists in our databse or not.
-        if (! doc) {
-            return res.send("This Game ID does not exist")
-        };
-
-        res.json(doc._id + " was found in our records.");
-    })
-});
-
-// Check if we can find the game id in our database
-v1.get("/:_gameId/get", function(req, res) {
-    var _gameId = req.params._gameId;
-
     if (! mongoose.Types.ObjectId.isValid(_gameId)) {
         return res.send("This is not a valid Game ID.")
     }
@@ -49,7 +30,7 @@ v1.get("/:_gameId/get", function(req, res) {
             return res.send("This Game ID does not exist")
         };
 
-        res.json(doc);
+        res.json(doc._id + " was found in our records.");
     })
 });
 
