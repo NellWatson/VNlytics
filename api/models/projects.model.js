@@ -47,7 +47,7 @@ export const addProject = async (project) => {
         return { type: "success", message: "Project was successfully created.", data: { _id: doc._id, project_id: doc.project_id } };
     } catch (err) {
         if (err.name == "MongoServerError" && err.code == 11000) {
-            return { type: "error", message: "Project with this ID already exists!" };
+            return { type: "failure", message: "Project with this ID already exists!" };
         } else if (err.name === "ValidationError") {
             return { type: "failure", message: "Required parameters are not provided for creating a new project." };
         };
@@ -83,6 +83,20 @@ export const updateData = async (projectId, updatedObj) => {
     
 };
 
+export const deleteData = async () => {
+    try {
+        const doc = await ProjectsData.deleteMany({});
+    
+        if (doc.ok === 1 || doc.acknowledged === true) {
+            return { type: "success", message: "All projects have been deleted." };
+        } else {
+            return { type: "failure", message: "Some error occured." }
+        }
+    } catch (err) {
+        logger.error(err.name + ": " + err.message);
+    }
+}
+
 export const byId = async (query) => {
     try {
         const doc = await ProjectsData.findOne(query);
@@ -100,7 +114,7 @@ export const byId = async (query) => {
 export const countTotalProjects = async () => {
     try {
         const value = await ProjectsData.estimatedDocumentCount();
-        var str_value = "";
+        let str_value = "";
 
         if (value === 0) {
             str_value = "No Project is"
@@ -109,7 +123,7 @@ export const countTotalProjects = async () => {
         } else {
             str_value = `${value} Projects are`
         };
-        return { type: "success", message: str_values + " registered with the site.", data: value }
+        return { type: "success", message: str_value + " registered with the site.", data: value }
     } catch (err) {
         logger.error(err.name + ": " + err.message);
     }

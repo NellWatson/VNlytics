@@ -1,5 +1,5 @@
 // Load the models
-import { addProject, byId, countTotalProjects, getData, updateData } from "../models/projects.model.js";
+import { addProject, byId, countTotalProjects, deleteData, getData, updateData } from "../models/projects.model.js";
 import { aggregateData } from "../models/game_data.model.js";
 
 // Load helper function
@@ -54,7 +54,31 @@ export const updateProject = async (req, res) => {
         });
     };
 
-    const data = await updateData(projectId, updatedObj)
+    const data = await updateData(projectId, updatedObj);
+
+    if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
+};
+
+export const deleteAllProjects = async (req, res) => {
+    if (process.env.NODE_ENV != "test") {
+        res.status(400).json({
+            type: "failure",
+            message: "Projects can only be deleted in test environment."
+        })
+    };
+
+    if (req.header("Delete-Project-Auth") != process.env.DELETE_PROJECT_KEY) {
+        res.status(400).json({
+            type: "failure",
+            message: "Contact admin for the correct auth key."
+        });
+    };
+
+    const data = await deleteData();
 
     if (data.type === "failure") {
         res.status(400).json(data);

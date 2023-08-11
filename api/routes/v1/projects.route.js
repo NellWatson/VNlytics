@@ -5,7 +5,7 @@ import { Router } from "express";
 import GameData from "../../models/game_data.model.js";
 
 // Load controller
-import { createNewProject, getAllPlatformCount, getOneProject, invalidProjectId, updateProject } from "../../controller/projects.controller.js";
+import { createNewProject, deleteAllProjects, getAllPlatformCount, getOneProject, invalidProjectId, updateProject } from "../../controller/projects.controller.js";
 
 // Load helper function
 import helper from "../../utils/helper.js";
@@ -18,6 +18,9 @@ v1.get("/", invalidProjectId);
 
 // Allow user to create their own project
 v1.post("/", createNewProject);
+
+// Allow user to create their own project
+v1.delete("/", deleteAllProjects);
 
 // Check if we can find the project in our database
 v1.get("/:_projectId", getOneProject);
