@@ -65,19 +65,21 @@ export const getData = async (query) => {
     };
 };
 
-export const updateData = async (projectId, updatedObj) => {
-    const query = { project_id: projectId };
+export const updateData = async (query, updatedObj) => {
     const update = { $set: updatedObj };
 
     try {
         const doc = await ProjectsData.findOneAndUpdate(query, update, { new: true });
         
         if (doc === null) {
-            return { type: "failure", message: query.project_id + " Project does not exist." };
+            return { type: "failure", message: query.project_id + " Project either does not exist or a valid ID was not provided." };
         } else {
             return { type: "success", message: doc.title + " Project has been updated." };
         }
     } catch (err) {
+        if (err.name === "CastError" && err.path === "_id") {
+            return { type: "failure", message: "An invalid ID was provided." };
+        };
         logger.error(err.name + ": " + err.message);
     }
     

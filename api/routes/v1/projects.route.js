@@ -5,7 +5,7 @@ import { Router } from "express";
 import GameData from "../../models/game_data.model.js";
 
 // Load controller
-import { createNewProject, deleteAllProjects, getAllPlatformCount, getOneProject, invalidProjectId, updateProject } from "../../controller/projects.controller.js";
+import { createNewProject, deleteAllProjects, getAllPlatformCount, getOneProject, invalidProjectId, updateProject } from "../../controllers/projects.controller.js";
 
 // Load helper function
 import helper from "../../utils/helper.js";

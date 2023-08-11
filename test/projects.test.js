@@ -8,6 +8,8 @@
 
 chai.use(chaiHttp);
 
+const project_ids = {}
+
 describe("Project:", () => {
     before(async () => {
         const res = await chai.request(app)
@@ -35,6 +37,8 @@ describe("Project:", () => {
         res.should.have.status(200);
         res.body.should.be.a("object");
         res.body.should.have.property("type").eql("success");
+
+        project_ids[res.body.data.project_id] = res.body.data._id;
     });
 
     it("Add second project", async () => {
@@ -53,6 +57,8 @@ describe("Project:", () => {
         res.should.have.status(200);
         res.body.should.be.a("object");
         res.body.should.have.property("type").eql("success");
+
+        project_ids[res.body.data.project_id] = res.body.data._id;
     });
 
     it("Check if project is added properly", async () => {
@@ -62,6 +68,21 @@ describe("Project:", () => {
         res.body.should.be.a("object");
         res.body.should.have.property("type").eql("success");
     });
+
+    it("Update the first project description", async () => {
+        const query = {
+            "id": project_ids["TestGame"],
+            "description": "Test description #2."
+        };
+
+        const res = await chai.request(app)
+            .put("/v1/TestGame")
+            .send(query);
+
+        res.should.have.status(200);
+        res.body.should.be.a("object");
+        res.body.should.have.property("type").eql("success");
+    })
 
     it("Adding same project again should not be possible", async () => {
         const project = {

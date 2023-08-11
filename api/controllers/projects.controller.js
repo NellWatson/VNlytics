@@ -37,13 +37,17 @@ export const createNewProject = async (req, res) => {
 };
 
 export const updateProject = async (req, res) => {
-    const projectId = req.params._projectId;
+    const query = {
+        _id: req.body.id,
+        project_id: req.params._projectId
+    };
+    delete req.body.id;
     const updatedObj = helper.validatePost( CONSTANT.projectUpdatableFields, req.body );
 
-    if (req.header("Create-Project-Auth") != process.env.CREATE_NEW_PROJECT_KEY) {
+    if (query._id === null || query._id === undefined) {
         res.status(400).json({
             type: "failure",
-            message: "Contact admin for the correct auth key."
+            message: "Please provide ID of the project."
         });
     };
 
@@ -54,7 +58,7 @@ export const updateProject = async (req, res) => {
         });
     };
 
-    const data = await updateData(projectId, updatedObj);
+    const data = await updateData(query, updatedObj);
 
     if (data.type === "failure") {
         res.status(400).json(data);

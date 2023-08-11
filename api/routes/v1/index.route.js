@@ -6,7 +6,7 @@ import gameData from "./game_data.route.js";
 import projects from "./projects.route.js";
 
 // Load controller
-import { countAllProjects, createNewProject, getAllProjects } from "../../controller/projects.controller.js";
+import { countAllProjects, createNewProject, getAllProjects } from "../../controllers/projects.controller.js";
 
 // Initialise the router
 const v1 = Router();
