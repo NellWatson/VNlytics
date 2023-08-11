@@ -48,6 +48,13 @@ app.use((req, res) => {
 });
 
 app.use((error, req, res, next) => {
+   if (error.name === "SyntaxError" && error.status === 400 && error.type === "entity.parse.failed") {
+      return res.status(401).json({
+         type: "error",
+         message: "The JSON request is malformed."
+      })
+   };
+
    res.status(500).json({
       type: "error",
       message: "500: Internal Server Error"});
