@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import logger from "../utils/logger.js";
 
 const gameDataSchema = mongoose.Schema({
     project_id: {
@@ -79,16 +80,15 @@ const gameDataSchema = mongoose.Schema({
     relationship_data: {
         type: mongoose.Schema.Types.Mixed
     },
-    play_data: [
-        {
-            type: mongoose.Schema.Types.Mixed
-        }
-    ],
-    end_data: [
-        {
-            type: mongoose.Schema.Types.Mixed
-        }
-    ]
+    choice_data: {
+        type: mongoose.Schema.Types.Mixed
+    },
+    play_data: {
+        type: mongoose.Schema.Types.Mixed
+    },
+    end_data: {
+        type: mongoose.Schema.Types.Mixed
+    }
 });
 
 const GameData = mongoose.model("gameData", gameDataSchema);
@@ -335,8 +335,19 @@ export const updateMechanicsData = (gameId, field, data, callback) => {
     GameData.findOneAndUpdate(query, update, options, callback);
 };
 
-export const byId = (query, callback) => {
-    GameData.findOne(query, callback);
+export const byId = async (query) => {
+    try {
+        const doc = await GameData.findOne(query);
+
+        if (doc === null) {
+            return { type: "failure", message: query._id + " Game Instance does not exist." };
+        } else {
+            return { type: "success", message: query._id + " Game Instance exists." };
+        }
+    } catch (err) {
+        logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
+    };
 };
 
 export const aggregateData = (field, query, callback ) => {

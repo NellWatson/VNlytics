@@ -21,8 +21,6 @@ v1.get("/total_projects", countAllProjects);
 
 v1.get("/project", getAllProjects);
 
-v1.post("/create", createNewProject);
-
 //Load the projects module
 v1.use("/", projects);
 

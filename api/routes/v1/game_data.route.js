@@ -2,36 +2,16 @@
 import { Router } from "express";
 
 // Load controller
-import { addNewGameId } from "../../controllers/game_data.controller.js";
+import { addNewGameId, getById } from "../../controllers/game_data.controller.js";
 
 // Initialise the router
 const v1 = Router();
 
-// Check if we can find the game id in our database
-v1.get("/:_gameId", function(req, res) {
-    var _gameId = req.params._gameId;
-
-    if (! mongoose.Types.ObjectId.isValid(_gameId)) {
-        return res.send("This is not a valid Game ID.")
-    }
-
-    GameData.byId( { _id: _gameId }, function (err, doc) {
-        
-        if (err) {
-            throw err;
-        };
-
-        // Check whether the Game ID exists in our databse or not.
-        if (! doc) {
-            return res.send("This Game ID does not exist")
-        };
-
-        res.json(doc._id + " was found in our records.");
-    })
-});
-
 // Create a new Game ID.
 v1.post("/", addNewGameId);
+
+// Check if we can find the game id in our database
+v1.get("/:_gameId", getById);
 
 v1.post("/:_gameId", function(req, res) {
     var _gameId = req.params._gameId;

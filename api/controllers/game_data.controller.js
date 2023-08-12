@@ -1,8 +1,9 @@
 import geoip from "geoip-lite";
+import mongoose from "mongoose";
 
 // Load the models
 import ProjectsData from "../models/projects.model.js";
-import GameData, { addGameId } from "../models/game_data.model.js";
+import GameData, { addGameId, byId } from "../models/game_data.model.js";
 
 // Load helper function
 import helper from "../utils/helper.js";
@@ -35,3 +36,21 @@ export const addNewGameId = async (req, res) => {
         res.status(200).json(data);
     };
 };
+
+export const getById = async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params._gameId)) {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide a valid Game ID."})
+    };
+
+    const data = await byId( { _id: req.params._gameId })
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
+}

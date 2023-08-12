@@ -28,7 +28,7 @@ v1.put("/:_projectId", updateProject);
 // Send back the stats related to the game
 v1.get("/:_projectId/platform", getAllPlatformCount);
 
-v1.get("/:_projectId/summary", async (req, res) => {
+v1.get("/:_projectId/stats/summary", async (req, res) => {
     var _query = { project_id: req.params._projectId, filled_form: true };
     var _field = "summary";
 
@@ -44,7 +44,7 @@ v1.get("/:_projectId/summary", async (req, res) => {
     })
 });
 
-v1.get("/:_projectId/player", async (req, res) => {
+v1.get("/:_projectId/stats/player", async (req, res) => {
     var _query = { project_id: req.params._projectId };
     var _field = "player";
 
@@ -60,7 +60,7 @@ v1.get("/:_projectId/player", async (req, res) => {
     })
 });
 
-v1.get("/:_projectId/:_queryKey", async (req, res) => {
+v1.get("/:_projectId/stats/:_queryKey", async (req, res) => {
     var _field = req.params._queryKey;
     
     req.query.project_id = req.params._projectId;
