@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 // Load the models
 import ProjectsData from "../models/projects.model.js";
-import GameData, { addGameId, byId } from "../models/game_data.model.js";
+import GameData, { addGameId, byId, updatePlayData } from "../models/game_data.model.js";
 
 // Load helper function
 import helper from "../utils/helper.js";
@@ -54,3 +54,52 @@ export const getById = async (req, res) => {
         res.status(200).json(data);
     };
 }
+
+export const updatePlayDataController = async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params._gameId)) {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide a valid Game ID."})
+    };
+
+    // Check if the Project ID is in the file.
+    const gameExistsCount = await helper.documentExists( ProjectsData, {project_id: req.projectId} );
+
+    if (gameExistsCount === 0) {
+        return res.status(400).json({
+            type: "failure",
+            message: "The provided Project ID does not exist in our database."
+        });
+    };
+
+    if (helper.isEmpty(req.body)) {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please send data to be updated with your request."
+        });
+    };
+
+    if (req.body.key === undefined || req.body.key === "") {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide a key for this update with your request."
+        });
+    };
+
+    if (req.body.data === undefined || req.body.data === "") {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide data for this update with your request."
+        });
+    };
+
+    const data = await updatePlayData(req.params._gameId, req.body.key, req.body.data)
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
+};

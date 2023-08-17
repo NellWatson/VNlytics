@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(
     mongoSanitize({
         allowDots: true,
-        replaceWith: '_',
+        replaceWith: process.env.MONGO_SANITISE_WITH,
     }),
 );
 

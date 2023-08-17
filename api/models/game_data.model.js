@@ -312,16 +312,32 @@ export const updateData = (gameId, updatedObj, endDate, options, callback) => {
     GameData.findOneAndUpdate(query, update, options, callback);
 };
 
-export const updatePlayData = (gameId, updatedObj, callback) => {
-    var query = {
-        _id: gameId,
-        end_date: {"$exists": false}
-    };
+export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData) => {
+    try {
+        const query = {
+            _id: gameId,
+            end_date: {$exists: false}
+        };
+    
+        const update = {
+            $set: Object.keys(updatedPlayData).reduce((accumulator, key) => {
+                accumulator[`play_data.${updatedPlayDataKey}.${key}`] = updatedPlayData[key];
+                return accumulator;
+            }, {})
+        };
+    
+        const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });
+        
+        if (doc === null) {
+            return { type: "failure", message: doc._id + " could not be updated." };
+        } else {
+            return { type: "success", message: doc._id + " Game Instance has been updated." };
+        }
 
-    var update = { $push: { "play_data": updatedObj } };
-    var options = { $safe: true, upsert: true, new: true };
-
-    GameData.findOneAndUpdate(query, update, options, callback);
+    } catch (err) {
+        logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
+    }
 };
 
 export const updateMechanicsData = (gameId, field, data, callback) => {
@@ -330,7 +346,7 @@ export const updateMechanicsData = (gameId, field, data, callback) => {
         end_date: {"$exists": false}
     };
     var update = { $push: { ["game_mechanics." + field]: data } };
-    var options = { $safe: true, upsert: true, new: true };
+    var options = { upsert: true, new: true };
 
     GameData.findOneAndUpdate(query, update, options, callback);
 };

@@ -2,7 +2,7 @@
 import { Router } from "express";
 
 // Load controller
-import { addNewGameId, getById } from "../../controllers/game_data.controller.js";
+import { addNewGameId, getById, updatePlayDataController } from "../../controllers/game_data.controller.js";
 
 // Initialise the router
 const v1 = Router();
@@ -13,40 +13,7 @@ v1.post("/", addNewGameId);
 // Check if we can find the game id in our database
 v1.get("/:_gameId", getById);
 
-v1.post("/:_gameId", function(req, res) {
-    var _gameId = req.params._gameId;
-
-    helper.documentExists( GameData, { _id: _gameId } )
-        .then(function(c) {
-            if ( c == 0 ) {
-                return res.send("The provided Game Id does not exist in our database.");
-            } else {
-
-                GameData.updatePlayData( _gameId, postObj, function(err, doc) {
-                    
-                    if (err && err.name === "MongoError" && err.code === 11000) {
-                        res.send("This game entry has already been filled!");
-                    } else if (err) {
-                        throw err;
-                    };
-
-                    if (doc) {
-                        res.json(doc._id + " was added to our records.");
-                    } else {
-                        throw err;
-                    };
-                })
-            };
-        })
-
-        .catch(function(err) {
-            if (err.name == "CastError" && err.kind == "ObjectId") {
-                res.send("Please use a valid ID");
-            } else {
-                throw err;
-            }
-        });
-});
+v1.post("/:_gameId", updatePlayDataController);
 
 v1.post("/:_gameId/update", function(req, res) {
     var allowedUpdate = [ "founder_name", "founder_startup" ];
