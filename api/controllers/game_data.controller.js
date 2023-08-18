@@ -7,6 +7,7 @@ import GameData, { addGameId, byId, updatePlayData } from "../models/game_data.m
 
 // Load helper function
 import helper from "../utils/helper.js";
+import constants from "../utils/constants.js";
 
 export const addNewGameId = async (req, res) => {
     // Check if the Project ID is in the file.
@@ -55,7 +56,7 @@ export const getById = async (req, res) => {
     };
 }
 
-export const updatePlayDataController = async (req, res) => {
+export const updateData = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params._gameId)) {
         return res.status(400).json({
             type: "failure",
@@ -63,7 +64,7 @@ export const updatePlayDataController = async (req, res) => {
     };
 
     // Check if the Project ID is in the file.
-    const gameExistsCount = await helper.documentExists( ProjectsData, {project_id: req.projectId} );
+    const gameExistsCount = await helper.documentExists(ProjectsData, {project_id: req.projectId});
 
     if (gameExistsCount === 0) {
         return res.status(400).json({
@@ -79,6 +80,20 @@ export const updatePlayDataController = async (req, res) => {
         });
     };
 
+    if (req.body.type === undefined || req.body.type === "") {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide a update type with your request."
+        });
+    };
+
+    if (!constants.allowedUpdateMethods.includes(req.body.type)) {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide a correct update type with your request."
+        });
+    }
+
     if (req.body.key === undefined || req.body.key === "") {
         return res.status(400).json({
             type: "failure",
@@ -86,14 +101,17 @@ export const updatePlayDataController = async (req, res) => {
         });
     };
 
-    if (req.body.data === undefined || req.body.data === "") {
+    if (req.body.data === undefined || req.body.data === "" || req.body.data === {} || req.body.data === []) {
         return res.status(400).json({
             type: "failure",
             message: "Please provide data for this update with your request."
         });
     };
 
-    const data = await updatePlayData(req.params._gameId, req.body.key, req.body.data)
+    var data = null;
+    if (req.body.type === "play") {
+        data = await updatePlayData(req.params._gameId, req.body.key, req.body.data);
+    };
 
     if (data.type === "error") {
         res.status(500).json(data);

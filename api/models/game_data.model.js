@@ -289,7 +289,7 @@ export const addGameId = async (gameDataObj, callback) => {
 
     } catch (err) {
         if (err.name === "ValidationError") {
-            return { type: "failure", message: "Required parameters are not provided for creating a new project." };
+            return { type: "failure", message: "Required parameters are not provided for creating a new qgame instance." };
         };
 
         logger.error(err.name + ": " + err.message);
@@ -318,12 +318,17 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
             _id: gameId,
             end_date: {$exists: false}
         };
-    
-        const update = {
-            $set: Object.keys(updatedPlayData).reduce((accumulator, key) => {
-                accumulator[`play_data.${updatedPlayDataKey}.${key}`] = updatedPlayData[key];
-                return accumulator;
-            }, {})
+
+        let update = {};
+        if (updatedPlayData.constructor === Object) {
+            update = Object.keys(updatedPlayData).reduce((accumulator, key) => {
+                    accumulator[`play_data.${updatedPlayDataKey}.${key}`] = updatedPlayData[key];
+                    return accumulator;
+                }, {});
+        } else {
+            update = {
+                [`play_data.${updatedPlayDataKey}`]: updatedPlayData,
+            }
         };
     
         const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });

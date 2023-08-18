@@ -2,7 +2,7 @@
 import { Router } from "express";
 
 // Load controller
-import { addNewGameId, getById, updatePlayDataController } from "../../controllers/game_data.controller.js";
+import { addNewGameId, getById, updateData } from "../../controllers/game_data.controller.js";
 
 // Initialise the router
 const v1 = Router();
@@ -13,7 +13,7 @@ v1.post("/", addNewGameId);
 // Check if we can find the game id in our database
 v1.get("/:_gameId", getById);
 
-v1.post("/:_gameId", updatePlayDataController);
+v1.post("/:_gameId", updateData);
 
 v1.post("/:_gameId/update", function(req, res) {
     var allowedUpdate = [ "founder_name", "founder_startup" ];
