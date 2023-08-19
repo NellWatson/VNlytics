@@ -316,7 +316,7 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
     try {
         const query = {
             _id: gameId,
-            end_date: {$exists: false}
+            end_date: mongoose.trusted({$exists: false})
         };
 
         let update = {};
