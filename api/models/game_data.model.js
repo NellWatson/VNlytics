@@ -312,6 +312,42 @@ export const updateData = (gameId, updatedObj, endDate, options, callback) => {
     GameData.findOneAndUpdate(query, update, options, callback);
 };
 
+export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoiceData) => {
+    try {
+        const query = {
+            _id: gameId,
+            end_date: mongoose.trusted({$exists: false})
+        };
+
+        let update = {};
+        if (Array.isArray(updatedChoiceDataKey) === true) {
+            if (updatedChoiceDataKey.length != updatedChoiceData.length) {
+                return { type: "failure", message: "Key and data length do not match." };
+            };
+
+            for (let i in updatedChoiceDataKey) {
+                update[`choice_data.${updatedChoiceDataKey[i]}`] = updatedChoiceData[i]
+            }
+        } else {
+            update = {
+                [`choice_data.${updatedChoiceDataKey}`]: updatedChoiceData,
+            }
+        }
+    
+        const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });
+        
+        if (doc === null) {
+            return { type: "failure", message: doc._id + " could not be updated." };
+        } else {
+            return { type: "success", message: doc._id + " Game Instance has been updated." };
+        }
+
+    } catch (err) {
+        logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
+    }
+};
+
 export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData) => {
     try {
         const query = {

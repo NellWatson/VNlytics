@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 // Load the models
 import ProjectsData from "../models/projects.model.js";
-import GameData, { addGameId, byId, updatePlayData } from "../models/game_data.model.js";
+import GameData, { addGameId, byId, updateChoiceData, updatePlayData } from "../models/game_data.model.js";
 
 // Load helper function
 import helper from "../utils/helper.js";
@@ -109,7 +109,9 @@ export const updateData = async (req, res) => {
     };
 
     var data = null;
-    if (req.body.type === "play") {
+    if (req.body.type === "choice") {
+        data = await updateChoiceData(req.params._gameId, req.body.key, req.body.data);
+    } else if (req.body.type === "play") {
         data = await updatePlayData(req.params._gameId, req.body.key, req.body.data);
     };
 
