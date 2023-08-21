@@ -312,6 +312,46 @@ export const updateData = (gameId, updatedObj, endDate, options, callback) => {
     GameData.findOneAndUpdate(query, update, options, callback);
 };
 
+export const updateRelationshipData = async (gameId, updatedRelationshipDataKey, updatedRelationshipData) => {
+    try {
+        const query = {
+            _id: gameId,
+            end_date: mongoose.trusted({$exists: false})
+        };
+
+        let update = {$inc: {}};
+        if (Array.isArray(updatedRelationshipDataKey) === true) {
+            if (updatedRelationshipDataKey.length != updatedRelationshipData.length) {
+                return { type: "failure", message: "Key and data length do not match." };
+            };
+
+            if (!updatedRelationshipData.every(i => typeof i === "number")) {
+                return { type: "failure", message: "Values can only be numeric." };
+            };
+
+            for (let i in updatedRelationshipDataKey) {
+                update["$inc"][`relationship_data.${updatedRelationshipDataKey[i]}`] = updatedRelationshipData[i];
+            }
+        } else {
+            update["$inc"] = {
+                [`relationship_data.${updatedRelationshipDataKey}`]: updatedRelationshipData,
+            }
+        };
+    
+        const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });
+        
+        if (doc === null) {
+            return { type: "failure", message: doc._id + " could not be updated." };
+        } else {
+            return { type: "success", message: doc._id + " Game Instance has been updated." };
+        };
+
+    } catch (err) {
+        logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
+    };
+};
+
 export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoiceData) => {
     try {
         const query = {
@@ -326,13 +366,13 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
             };
 
             for (let i in updatedChoiceDataKey) {
-                update[`choice_data.${updatedChoiceDataKey[i]}`] = updatedChoiceData[i]
+                update[`choice_data.${updatedChoiceDataKey[i]}`] = updatedChoiceData[i];
             }
         } else {
             update = {
                 [`choice_data.${updatedChoiceDataKey}`]: updatedChoiceData,
             }
-        }
+        };
     
         const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });
         
@@ -340,7 +380,7 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
             return { type: "failure", message: doc._id + " could not be updated." };
         } else {
             return { type: "success", message: doc._id + " Game Instance has been updated." };
-        }
+        };
 
     } catch (err) {
         logger.error(err.name + ": " + err.message);
@@ -373,12 +413,12 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
             return { type: "failure", message: doc._id + " could not be updated." };
         } else {
             return { type: "success", message: doc._id + " Game Instance has been updated." };
-        }
+        };
 
     } catch (err) {
         logger.error(err.name + ": " + err.message);
         return { type: "error", message: "Internal Server Error. Contact administrator." }
-    }
+    };
 };
 
 export const updateMechanicsData = (gameId, field, data, callback) => {

@@ -1,6 +1,6 @@
 {
   "name": "vnlytics",
-  "version": "0.1.5.0820",
+  "version": "0.1.5.0821",
   "description": "VNlytics is a narrative analytics system for story based games.  It enables player choices to be recorded for developer analysis, or additionally returned to the player, to compare their choices with others.",
   "type": "module",
   "main": "api/app.js",
