@@ -9,9 +9,9 @@ const helperFunctions = {
             if (key in postData) {
                 _temp[key] = postData[key];
             }
-        }
+        };
 
-        return _temp
+        return _temp;
     },
 
     // Checks if an object is empty
@@ -36,7 +36,7 @@ const helperFunctions = {
 
         for ( var i = 0; i < obj.length; i++ ) {
             _temp.push( Object.keys(i) );
-        }
+        };
 
         return _temp
     },
@@ -49,7 +49,7 @@ const helperFunctions = {
         if ( obj.constructor === Array ) {
             var _temp = [];
             var isArray = true;
-        }
+        };
 
         for (var key in obj) {
             var value = obj[key];
@@ -70,7 +70,7 @@ const helperFunctions = {
             } else {
                 _temp[key] = value;
             }
-        }
+        };
 
         return _temp
     }

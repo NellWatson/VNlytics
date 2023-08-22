@@ -9,9 +9,9 @@ import GameData, { addGameId, byId, updateChoiceData, updateRelationshipData, up
 import helper from "../utils/helper.js";
 import constants from "../utils/constants.js";
 
-export const addNewGameId = async (req, res) => {
+export const checkIfPathValid = async(req, res, next) => {
     // Check if the Project ID is in the file.
-    const gameExistsCount = await helper.documentExists( ProjectsData, {project_id: req.projectId} );
+    const gameExistsCount = await helper.documentExists(ProjectsData, {project_id: req.projectId});
 
     if ( gameExistsCount === 0 ) {
         return res.status(400).json({
@@ -20,6 +20,32 @@ export const addNewGameId = async (req, res) => {
         });
     };
 
+    const id = req.url.split("/")[1];
+    // If there isn't a game id provided, go to the next route.
+    if (id == "") {
+        next();
+    };
+
+    // Check if the provided game ID is valid or not;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide a valid Game ID."
+        });
+    };
+
+    // Make sure that the body is not empty.
+    if (helper.isEmpty(req.body)) {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please send data to be updated with your request."
+        });
+    };
+
+    next();
+};
+
+export const addNewGameId = async (req, res) => {
     req.body.project_id = req.projectId;
     try {
         req.body.country = geoip.lookup(req.ip).country;
@@ -38,13 +64,15 @@ export const addNewGameId = async (req, res) => {
     };
 };
 
-export const getById = async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params._gameId)) {
-        return res.status(400).json({
-            type: "failure",
-            message: "Please provide a valid Game ID."})
-    };
+export const updateGameInstanceData = async (req, res) => {
+    
+};
 
+export const deleteGameInstance = async (req, res) => {
+
+};
+
+export const getById = async (req, res) => {
     const data = await byId( { _id: req.params._gameId })
 
     if (data.type === "error") {
@@ -57,29 +85,6 @@ export const getById = async (req, res) => {
 }
 
 export const updateData = async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params._gameId)) {
-        return res.status(400).json({
-            type: "failure",
-            message: "Please provide a valid Game ID."})
-    };
-
-    // Check if the Project ID is in the file.
-    const gameExistsCount = await helper.documentExists(ProjectsData, {project_id: req.projectId});
-
-    if (gameExistsCount === 0) {
-        return res.status(400).json({
-            type: "failure",
-            message: "The provided Project ID does not exist in our database."
-        });
-    };
-
-    if (helper.isEmpty(req.body)) {
-        return res.status(400).json({
-            type: "failure",
-            message: "Please send data to be updated with your request."
-        });
-    };
-
     if (req.body.type === undefined || req.body.type === "") {
         return res.status(400).json({
             type: "failure",
@@ -112,7 +117,7 @@ export const updateData = async (req, res) => {
     if (req.body.type === "relationship") {
         data = await updateRelationshipData(req.params._gameId, req.body.key, req.body.data);
     } else if (req.body.type === "choice") {
-        data = await updatePlayData(req.params._gameId, req.body.key, req.body.data);
+        data = await updateChoiceData(req.params._gameId, req.body.key, req.body.data);
     } else if (req.body.type === "play") {
         data = await updatePlayData(req.params._gameId, req.body.key, req.body.data);
     };

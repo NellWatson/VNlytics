@@ -18,7 +18,7 @@ const gameDataSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    total_play_time: {
+    play_time: {
         type: Number
     },
     start_date: {
@@ -289,7 +289,7 @@ export const addGameId = async (gameDataObj, callback) => {
 
     } catch (err) {
         if (err.name === "ValidationError") {
-            return { type: "failure", message: "Required parameters are not provided for creating a new qgame instance." };
+            return { type: "failure", message: "Required parameters are not provided for creating a new game instance." };
         };
 
         logger.error(err.name + ": " + err.message);

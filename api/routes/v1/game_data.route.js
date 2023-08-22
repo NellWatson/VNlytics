@@ -2,10 +2,13 @@
 import { Router } from "express";
 
 // Load controller
-import { addNewGameId, getById, updateData } from "../../controllers/game_data.controller.js";
+import { addNewGameId, checkIfPathValid, deleteGameInstance, getById, updateData, updateGameInstanceData } from "../../controllers/game_data.controller.js";
 
 // Initialise the router
 const v1 = Router();
+
+// Check if the project exists
+v1.use(checkIfPathValid);
 
 // Create a new Game ID.
 v1.post("/", addNewGameId);
@@ -15,43 +18,9 @@ v1.get("/:_gameId", getById);
 
 v1.post("/:_gameId", updateData);
 
-v1.post("/:_gameId/update", function(req, res) {
-    var allowedUpdate = [ "founder_name", "founder_startup" ];
-    req.body = helper.sanitise(req.body);
+v1.put("/:_gameId", updateGameInstanceData);
 
-    var _gameId = req.params._gameId;
-    var updatedObj = helper.validatePost( allowedUpdate, req.body );
-
-    if ( helper.isEmpty(updatedObj) ) {
-        return res.send("Please send data to be updated with your request.");
-    };
-
-    helper.documentExists( GameData, { _id: _gameId } )
-        .then(function(c) {
-            if ( c == 0 ) {
-                return res.send("The provided Game Id does not exist in our database");
-            } else {
-
-                GameData.updateData( _gameId, updatedObj, {}, function(err, doc) {
-
-                    if (err) {
-                        console.log(err.name);
-                        throw err;
-                    };
-
-                    res.json(_gameId + " is marked as finished.");
-                })
-            }
-        })
-
-        .catch(function(err) {
-            if (err.name == "CastError" && err.kind == "ObjectId") {
-                res.send("Please use a valid ID.");
-            } else {
-                throw err;
-            }
-        });
-});
+v1.delete("/:_gameId", deleteGameInstance);
 
 v1.post("/:_gameId/form", function(req, res) {
     req.body = helper.sanitise(req.body);
