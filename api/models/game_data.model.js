@@ -18,15 +18,15 @@ const gameDataSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    play_time: {
-        type: Number
-    },
     start_date: {
         type: Date,
         default: Date.now
     },
     end_date: {
         type: Date
+    },
+    play_time: {
+        type: Number
     },
     sessions: {
         type: Number,
@@ -301,15 +301,49 @@ export const getData = (callback, limit) => {
     GameData.find(callback).limit(limit);
 };
 
-export const updateData = (gameId, updatedObj, endDate, options, callback) => {
-    var query = { _id: gameId };
-    var update = {
-        $set: updatedObj,
-        $push: { "end_date": endDate, "sessions": updatedObj["sessions"], "sessions_length": updatedObj["sessions_length"] },
-        $push: { "end_data": updatedObj }
-    };
+export const updateGameFields = async (gameId, updatedObj) => {
+    try {
+        const query = { _id: gameId };
+        const update = {};
+    
+        if (updatedObj.hasOwnProperty("sessions")) {
+            update["$inc"] = {
+                "sessions": updatedObj["sessions"]
+            };
+        };
+    
+        if (updatedObj.hasOwnProperty("play_time")) {
+            update["play_time"] = updatedObj["play_time"];
+        };
+    
+        if (updatedObj.hasOwnProperty("multiple_ids")) {
+            update["multiple_ids"] = true;
+        };
+    
+        if (updatedObj.hasOwnProperty("sessions_length")) {
+            if (Array.isArray(updatedObj["sessions_length"]) === true) {
+                update["$push"] = {
+                    "sessions_length": { $each: updatedObj["sessions_length"] }
+                };
+            } else {
+                update["$push"] = {
+                    "sessions_length": updatedObj["sessions_length"]
+                };
+            };
+        };
+    
+        const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });
+        
+        if (doc === null) {
+            return { type: "failure", message: doc._id + " could not be updated." };
+        } else {
+            return { type: "success", message: doc._id + " Game Instance has been updated." };
+        };
 
-    GameData.findOneAndUpdate(query, update, options, callback);
+    } catch (err) {
+        logger.error(err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." }
+    };
 };
 
 export const updateRelationshipData = async (gameId, updatedRelationshipDataKey, updatedRelationshipData) => {
@@ -419,17 +453,6 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
         logger.error(err.name + ": " + err.message);
         return { type: "error", message: "Internal Server Error. Contact administrator." }
     };
-};
-
-export const updateMechanicsData = (gameId, field, data, callback) => {
-    var query = {
-        _id: gameId,
-        end_date: {"$exists": false}
-    };
-    var update = { $push: { ["game_mechanics." + field]: data } };
-    var options = { upsert: true, new: true };
-
-    GameData.findOneAndUpdate(query, update, options, callback);
 };
 
 export const byId = async (query) => {

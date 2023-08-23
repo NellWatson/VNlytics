@@ -2,7 +2,7 @@
 import { Router } from "express";
 
 // Load controller
-import { addNewGameId, checkIfPathValid, deleteGameInstance, getById, updateData, updateGameInstanceData } from "../../controllers/game_data.controller.js";
+import { addNewGameId, checkIfPathValid, deleteGameInstance, getById, updateGameData, updateGameInstanceData } from "../../controllers/game_data.controller.js";
 
 // Initialise the router
 const v1 = Router();
@@ -16,7 +16,7 @@ v1.post("/", addNewGameId);
 // Check if we can find the game id in our database
 v1.get("/:_gameId", getById);
 
-v1.post("/:_gameId", updateData);
+v1.post("/:_gameId", updateGameData);
 
 v1.put("/:_gameId", updateGameInstanceData);
 

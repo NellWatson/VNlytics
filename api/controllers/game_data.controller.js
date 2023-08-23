@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 // Load the models
 import ProjectsData from "../models/projects.model.js";
-import GameData, { addGameId, byId, updateChoiceData, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
+import GameData, { addGameId, byId, updateChoiceData, updateGameFields, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
 
 // Load helper function
 import helper from "../utils/helper.js";
@@ -65,7 +65,24 @@ export const addNewGameId = async (req, res) => {
 };
 
 export const updateGameInstanceData = async (req, res) => {
-    
+    const updatedObj = helper.validatePost(constants.gameDataUpdatableFields, req.body);
+
+    if (helper.isEmpty(updatedObj)) {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please send data to be updated with your request."
+        });
+    };
+
+    const data = await updateGameFields(req.params._gameId, updatedObj);
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
 };
 
 export const deleteGameInstance = async (req, res) => {
@@ -84,7 +101,7 @@ export const getById = async (req, res) => {
     };
 }
 
-export const updateData = async (req, res) => {
+export const updateGameData = async (req, res) => {
     if (req.body.type === undefined || req.body.type === "") {
         return res.status(400).json({
             type: "failure",
