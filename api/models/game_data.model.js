@@ -307,6 +307,10 @@ export const updateGameFields = async (gameId, updatedObj) => {
         const update = {};
     
         if (updatedObj.hasOwnProperty("sessions")) {
+            if (updatedObj["sessions"] <= 0) {
+                return { type: "failure", message: "Session value can only be a positive number." };
+            };
+
             update["$inc"] = {
                 "sessions": updatedObj["sessions"]
             };
@@ -322,10 +326,26 @@ export const updateGameFields = async (gameId, updatedObj) => {
     
         if (updatedObj.hasOwnProperty("sessions_length")) {
             if (Array.isArray(updatedObj["sessions_length"]) === true) {
+                if (!updatedObj["sessions_length"].every(i => typeof i === "number" && i > 0)) {
+                    return { type: "failure", message: "Session length values can only be positive numbers." };
+                };
+
+                if (updatedObj["sessions_length"].length != updatedObj["sessions"]) {
+                    return { type: "failure", message: "Number of sessions and session length should be same." };
+                };
+
                 update["$push"] = {
                     "sessions_length": { $each: updatedObj["sessions_length"] }
                 };
             } else {
+                if (updatedObj["sessions_length"] <= 0) {
+                    return { type: "failure", message: "Session length values can only be a positive number." };
+                };
+
+                if (updatedObj["sessions"] != 1) {
+                    return { type: "failure", message: "Number of sessions and session length should be same." };
+                };
+
                 update["$push"] = {
                     "sessions_length": updatedObj["sessions_length"]
                 };
@@ -367,6 +387,10 @@ export const updateRelationshipData = async (gameId, updatedRelationshipDataKey,
                 update["$inc"][`relationship_data.${updatedRelationshipDataKey[i]}`] = updatedRelationshipData[i];
             }
         } else {
+            if (typeof updatedRelationshipData != "number") {
+                return { type: "failure", message: "Values can only be numeric." };
+            };
+
             update["$inc"] = {
                 [`relationship_data.${updatedRelationshipDataKey}`]: updatedRelationshipData,
             }
@@ -403,6 +427,10 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
                 update[`choice_data.${updatedChoiceDataKey[i]}`] = updatedChoiceData[i];
             }
         } else {
+            if (typeof updatedChoiceData === "string") {
+                return { type: "failure", message: "Choice text can only be a string." };
+            };
+
             update = {
                 [`choice_data.${updatedChoiceDataKey}`]: updatedChoiceData,
             }

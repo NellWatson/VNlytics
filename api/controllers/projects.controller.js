@@ -42,7 +42,7 @@ export const updateProject = async (req, res) => {
         project_id: req.params._projectId
     };
     delete req.body.id;
-    const updatedObj = helper.validatePost( CONSTANT.projectUpdatableFields, req.body );
+    const validatedObj = helper.validateBody( CONSTANT.projectUpdatableFields, req.body );
 
     if (query._id === null || query._id === undefined) {
         return res.status(400).json({
@@ -51,14 +51,21 @@ export const updateProject = async (req, res) => {
         });
     };
 
-    if (helper.isEmpty(updatedObj)) {
+    if (helper.isEmpty(validatedObj)) {
         return res.status(400).json({
             type: "failure",
             message: "Please send data to be updated with your request."
         });
     };
 
-    const data = await updateData(query, updatedObj);
+    if ("error" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Follwing keys have invalid value types: ${validatedObj.error}.`
+        });
+    };
+
+    const data = await updateData(query, validatedObj);
 
     if (data.type === "error") {
         res.status(500).json(data);

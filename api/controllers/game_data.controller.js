@@ -65,16 +65,23 @@ export const addNewGameId = async (req, res) => {
 };
 
 export const updateGameInstanceData = async (req, res) => {
-    const updatedObj = helper.validatePost(constants.gameDataUpdatableFields, req.body);
+    const validatedObj = helper.validateBody(constants.gameDataUpdatableFields, req.body);
 
-    if (helper.isEmpty(updatedObj)) {
+    if (helper.isEmpty(validatedObj)) {
         return res.status(400).json({
             type: "failure",
             message: "Please send data to be updated with your request."
         });
     };
 
-    const data = await updateGameFields(req.params._gameId, updatedObj);
+    if ("error" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Follwing keys have invalid value types: ${validatedObj.error}.`
+        });
+    };
+
+    const data = await updateGameFields(req.params._gameId, validatedObj);
 
     if (data.type === "error") {
         res.status(500).json(data);
@@ -90,7 +97,7 @@ export const deleteGameInstance = async (req, res) => {
 };
 
 export const getById = async (req, res) => {
-    const data = await byId( { _id: req.params._gameId })
+    const data = await byId({ _id: req.params._gameId })
 
     if (data.type === "error") {
         res.status(500).json(data);

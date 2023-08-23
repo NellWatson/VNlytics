@@ -1,25 +1,45 @@
 // This function strips out all the unwanted entries from postData
 const helperFunctions = {
-    validatePost: function(allowedKeys, postData) {
-        var _temp = {};
+    validateBody: (allowedKeys, postData) => {
+        let _temp = {};
 
-        for ( var i = 0; i < allowedKeys.length; i++ ) {
-            var key = allowedKeys[i];
-
+        for (let key in allowedKeys) {
             if (key in postData) {
-                _temp[key] = postData[key];
-            }
-        };
+                for (let j = 0; j < allowedKeys[key].length; j++ ) {
+                    if (allowedKeys[key][j] === "array" && Array.isArray(postData[key]) === true) {
+                        _temp[key] = postData[key];
+                        break;
+                        
+                    } else if (typeof postData[key] === allowedKeys[key][j]) {
+                        _temp[key] = postData[key];
+                        break;
 
+                    } else {
+                        // If the following key type has multiple types, only log an error when we have checked all types.
+                        if (j + 1 < allowedKeys[key].length) {
+                            continue;
+                        };
+
+                        if ("error" in _temp) {
+                            if (!_temp["error"].includes(key)) {
+                                _temp["error"].push(key);
+                            };
+                        } else {
+                            _temp["error"] = [key];
+                        };
+                    };
+                };
+            };
+        };
         return _temp;
     },
 
     // Checks if an object is empty
-    isEmpty: function(obj) {
+    isEmpty: (obj) => {
         return Object.keys(obj).length === 0;
     },
 
-    isObject: function(obj) {
+    isObject: (obj) => {
         return obj === Object(obj);
     },
 
@@ -27,11 +47,11 @@ const helperFunctions = {
         return await collection.countDocuments(query);
     },
 
-    getDistinct: function(collection, query) {
-        return collection.distinct( query ).exec();
+    getDistinct: (collection, query) => {
+        return collection.distinct(query).exec();
     },
 
-    getKey: function(obj) {
+    getKey: (obj) => {
         var _temp = [];
 
         for ( var i = 0; i < obj.length; i++ ) {
