@@ -25,6 +25,9 @@ const gameDataSchema = mongoose.Schema({
     end_date: {
         type: Date
     },
+    parent_doc: {
+        type: mongoose.Schema.Types.ObjectId
+    },
     play_time: {
         type: Number
     },
@@ -366,43 +369,75 @@ export const updateGameFields = async (gameId, updatedObj) => {
     };
 };
 
-export const updateRelationshipData = async (gameId, updatedRelationshipDataKey, updatedRelationshipData) => {
+export const updateRelationshipData = async (gameId, updatedRelationshipDataKey, updatedRelationshipData, increment = false) => {
     try {
-        const query = {
-            _id: gameId,
-            end_date: mongoose.trusted({$exists: false})
+        const doc = await GameData.findById(gameId);
+        
+        if (doc === null) {
+            return { type: "failure", message: doc._id + " could not be found in our records." };
         };
 
-        let update = {$inc: {}};
+        const relationshipData = doc.relationship_data || {};
+        
         if (Array.isArray(updatedRelationshipDataKey) === true) {
             if (updatedRelationshipDataKey.length != updatedRelationshipData.length) {
                 return { type: "failure", message: "Key and data length do not match." };
             };
 
+            if (!updatedRelationshipDataKey.every(i => typeof i === "string")) {
+                return { type: "failure", message: "Relationship key can only be strings." };
+            };
+
             if (!updatedRelationshipData.every(i => typeof i === "number")) {
-                return { type: "failure", message: "Values can only be numeric." };
+                return { type: "failure", message: "Relationship value can only be numbers." };
             };
 
             for (let i in updatedRelationshipDataKey) {
-                update["$inc"][`relationship_data.${updatedRelationshipDataKey[i]}`] = updatedRelationshipData[i];
-            }
-        } else {
-            if (typeof updatedRelationshipData != "number") {
-                return { type: "failure", message: "Values can only be numeric." };
+                if (relationshipData.hasOwnProperty(updatedRelationshipDataKey[i]) && increment === true) {
+                    relationshipData[updatedRelationshipDataKey[i]] += updatedRelationshipData[i];
+                } else {
+                    relationshipData[updatedRelationshipDataKey[i]] = updatedRelationshipData[i];
+                };
             };
 
-            update["$inc"] = {
-                [`relationship_data.${updatedRelationshipDataKey}`]: updatedRelationshipData,
-            }
-        };
-    
-        const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });
-        
-        if (doc === null) {
-            return { type: "failure", message: doc._id + " could not be updated." };
         } else {
-            return { type: "success", message: doc._id + " Game Instance has been updated." };
+            if (typeof updatedRelationshipDataKey != "string") {
+                return { type: "failure", message: "Relationship key can only be a string." };
+            };
+
+            if (typeof updatedRelationshipData != "number") {
+                return { type: "failure", message: "Relationship value can only be a number." };
+            };
+
+            if (relationshipData.hasOwnProperty(updatedRelationshipDataKey) && increment === true) {
+                relationshipData[updatedRelationshipDataKey] += updatedRelationshipData;
+            } else {
+                relationshipData[updatedRelationshipDataKey] = updatedRelationshipData;
+            };
         };
+
+        doc.relationship_data = relationshipData;
+        doc.markModified("relationship_data");
+
+        if (doc.hasOwnProperty("end_date")) {
+            delete doc._id;
+            delete doc.end_date;
+            delete doc.ending;
+            delete doc.end_data;
+
+            const newDocObj = structuredClone(doc);
+            newDocObj.multiple_ids = true;
+
+            if (!newDocObj.hasOwnProperty("parent_doc")) {
+                newDocObj.parent_doc = gameId;
+            };
+
+            const newDoc = await GameData.create(newDocObj);
+            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+        };
+        
+        await doc.save();
+        return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
         logger.error(err.name + ": " + err.message);
@@ -412,37 +447,65 @@ export const updateRelationshipData = async (gameId, updatedRelationshipDataKey,
 
 export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoiceData) => {
     try {
-        const query = {
-            _id: gameId,
-            end_date: mongoose.trusted({$exists: false})
+        const doc = await GameData.findById(gameId);
+        
+        if (doc === null) {
+            return { type: "failure", message: doc._id + " could not be found in our records." };
         };
 
-        let update = {};
+        const choiceData = doc.choice_data || {};
+        
         if (Array.isArray(updatedChoiceDataKey) === true) {
             if (updatedChoiceDataKey.length != updatedChoiceData.length) {
                 return { type: "failure", message: "Key and data length do not match." };
             };
 
+            if (!updatedChoiceDataKey.every(i => typeof i === "string")) {
+                return { type: "failure", message: "Choice keys can only be strings." };
+            };
+
+            if (!updatedChoiceData.every(i => typeof i === "string")) {
+                return { type: "failure", message: "Choice values can only be strings." };
+            };
+
             for (let i in updatedChoiceDataKey) {
-                update[`choice_data.${updatedChoiceDataKey[i]}`] = updatedChoiceData[i];
-            }
+                choiceData[updatedChoiceDataKey[i]] = updatedChoiceData[i];
+            };
+
         } else {
-            if (typeof updatedChoiceData === "string") {
+            if (!updatedChoiceDataKey != "string") {
+                return { type: "failure", message: "Choice key can only be a string." };
+            };
+
+            if (typeof updatedChoiceData != "string") {
                 return { type: "failure", message: "Choice text can only be a string." };
             };
 
-            update = {
-                [`choice_data.${updatedChoiceDataKey}`]: updatedChoiceData,
-            }
+            choiceData[updatedChoiceDataKey] = updatedChoiceData;
         };
-    
-        const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });
+
+        doc.choice_data = choiceData;
+        doc.markModified("choice_data");
+
+        if (doc.hasOwnProperty("end_date")) {
+            delete doc._id;
+            delete doc.end_date;
+            delete doc.ending;
+            delete doc.end_data;
+            
+            const newDocObj = structuredClone(doc);
+            newDocObj.multiple_ids = true;
+
+            if (!newDocObj.hasOwnProperty("parent_doc")) {
+                newDocObj.parent_doc = gameId;
+            };
+
+            const newDoc = await GameData.create(newDocObj);
+            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+        };
         
-        if (doc === null) {
-            return { type: "failure", message: doc._id + " could not be updated." };
-        } else {
-            return { type: "success", message: doc._id + " Game Instance has been updated." };
-        };
+        await doc.save();
+        return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
         logger.error(err.name + ": " + err.message);
@@ -452,30 +515,83 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
 
 export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData) => {
     try {
-        const query = {
-            _id: gameId,
-            end_date: mongoose.trusted({$exists: false})
-        };
-
-        let update = {};
-        if (updatedPlayData.constructor === Object) {
-            update = Object.keys(updatedPlayData).reduce((accumulator, key) => {
-                    accumulator[`play_data.${updatedPlayDataKey}.${key}`] = updatedPlayData[key];
-                    return accumulator;
-                }, {});
-        } else {
-            update = {
-                [`play_data.${updatedPlayDataKey}`]: updatedPlayData,
-            }
-        };
-    
-        const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });
+        const doc = await GameData.findById(gameId);
         
         if (doc === null) {
-            return { type: "failure", message: doc._id + " could not be updated." };
-        } else {
-            return { type: "success", message: doc._id + " Game Instance has been updated." };
+            return { type: "failure", message: doc._id + " could not be found in our records." };
         };
+
+        const playData = doc.play_data || {};
+
+        if (Array.isArray(updatedPlayDataKey) === true) {
+            if (updatedPlayDataKey.length != updatedPlayData.length) {
+                return { type: "failure", message: "Key and data length do not match." };
+            };
+
+            if (!updatedPlayDataKey.every(i => typeof i === "string")) {
+                return { type: "failure", message: "Play keys can only be strings." };
+            };
+
+            for (const i in updatedPlayDataKey) {
+                if (!playData.hasOwnProperty(updatedPlayDataKey[i])) {
+                    playData[updatedPlayDataKey[i]] = {}
+                };
+
+                if (updatedPlayData[i].constructor != Object) {
+                    playData[updatedPlayDataKey[i]] = updatedPlayData;
+                    continue;
+                };
+
+                for (const key in updatedPlayData[i]) {
+                    playData[updatedPlayDataKey[i]][key] = updatedPlayData[i][key];
+                };
+            };
+            
+        } else {
+            if (typeof updatedPlayDataKey != "string") {
+                return { type: "failure", message: "Play key can only be a string." };
+            };
+
+            if (updatedPlayData.constructor === Object) {
+                for (const key in updatedPlayData) {
+                    if (!playData.hasOwnProperty(updatedPlayDataKey)) {
+                        playData[updatedPlayDataKey] = {};
+                    };
+
+                    playData[updatedPlayDataKey][key] = updatedPlayData[key];
+                };
+
+            } else {
+                if (typeof updatedPlayDataKey != "string") {
+                    return { type: "failure", message: "Play key can only be a string." };
+                };
+    
+                playData[updatedPlayDataKey] = updatedPlayData;
+            };
+        };
+
+        doc.play_data = playData;
+        doc.markModified("play_data");
+
+        if (doc.hasOwnProperty("end_date")) {
+            delete doc._id;
+            delete doc.end_date;
+            delete doc.ending;
+            delete doc.end_data;
+            
+            const newDocObj = structuredClone(doc);
+            newDocObj.multiple_ids = true;
+
+            if (!newDocObj.hasOwnProperty("parent_doc")) {
+                newDocObj.parent_doc = gameId;
+            };
+
+            const newDoc = await GameData.create(newDocObj);
+            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+        };
+        
+        await doc.save();
+        return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
         logger.error(err.name + ": " + err.message);

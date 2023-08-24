@@ -139,7 +139,8 @@ export const updateGameData = async (req, res) => {
 
     var data = null;
     if (req.body.type === "relationship") {
-        data = await updateRelationshipData(req.params._gameId, req.body.key, req.body.data);
+        const increment = req.body.increment || false;
+        data = await updateRelationshipData(req.params._gameId, req.body.key, req.body.data, increment);
     } else if (req.body.type === "choice") {
         data = await updateChoiceData(req.params._gameId, req.body.key, req.body.data);
     } else if (req.body.type === "play") {

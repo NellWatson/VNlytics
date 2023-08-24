@@ -3,9 +3,9 @@ const helperFunctions = {
     validateBody: (allowedKeys, postData) => {
         let _temp = {};
 
-        for (let key in allowedKeys) {
+        for (const key in allowedKeys) {
             if (key in postData) {
-                for (let j = 0; j < allowedKeys[key].length; j++ ) {
+                for (const j = 0; j < allowedKeys[key].length; j++ ) {
                     if (allowedKeys[key][j] === "array" && Array.isArray(postData[key]) === true) {
                         _temp[key] = postData[key];
                         break;
