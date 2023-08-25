@@ -5,7 +5,7 @@ const helperFunctions = {
 
         for (const key in allowedKeys) {
             if (key in postData) {
-                for (const j = 0; j < allowedKeys[key].length; j++ ) {
+                for (let j = 0; j < allowedKeys[key].length; j++) {
                     if (allowedKeys[key][j] === "array" && Array.isArray(postData[key]) === true) {
                         _temp[key] = postData[key];
                         break;

@@ -24,6 +24,7 @@ export const checkIfPathValid = async(req, res, next) => {
     // If there isn't a game id provided, go to the next route.
     if (id == "") {
         next();
+        return;
     };
 
     // Check if the provided game ID is valid or not;
@@ -81,7 +82,8 @@ export const updateGameInstanceData = async (req, res) => {
         });
     };
 
-    const data = await updateGameFields(req.params._gameId, validatedObj);
+    const increment = req.body.increment || false;
+    const data = await updateGameFields(req.params._gameId, validatedObj, increment);
 
     if (data.type === "error") {
         res.status(500).json(data);
@@ -145,6 +147,11 @@ export const updateGameData = async (req, res) => {
         data = await updateChoiceData(req.params._gameId, req.body.key, req.body.data);
     } else if (req.body.type === "play") {
         data = await updatePlayData(req.params._gameId, req.body.key, req.body.data);
+    } else {
+        res.status(400).json({
+            type: "failure",
+            message: "Please provide a valid type for this update with your request."
+        });
     };
 
     if (data.type === "error") {

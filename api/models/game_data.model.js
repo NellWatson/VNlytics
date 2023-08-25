@@ -36,6 +36,7 @@ const gameDataSchema = mongoose.Schema({
         default: 0
     },
     sessions_length: [
+        Number
     ],
     multiple_ids: {
         type: Boolean,
@@ -304,27 +305,40 @@ export const getData = (callback, limit) => {
     GameData.find(callback).limit(limit);
 };
 
-export const updateGameFields = async (gameId, updatedObj) => {
+export const updateGameFields = async (gameId, updatedObj, increment = false) => {
     try {
-        const query = { _id: gameId };
-        const update = {};
+        const doc = await GameData.findById(gameId);
+        
+        if (doc === null) {
+            return { type: "failure", message: doc._id + " could not be found in our records." };
+        };
     
         if (updatedObj.hasOwnProperty("sessions")) {
             if (updatedObj["sessions"] <= 0) {
-                return { type: "failure", message: "Session value can only be a positive number." };
+                return { type: "failure", message: "Sessions can only be a positive number." };
             };
 
-            update["$inc"] = {
-                "sessions": updatedObj["sessions"]
+            if (!"sessions" in doc) {
+                doc["sessions"] = 0;
+            };
+
+            if (increment === true) {
+                doc["sessions"] += updatedObj["sessions"];
+            } else {
+                doc["sessions"] = updatedObj["sessions"];
             };
         };
     
-        if (updatedObj.hasOwnProperty("play_time")) {
-            update["play_time"] = updatedObj["play_time"];
+        if (!updatedObj.hasOwnProperty("play_time")) {
+            if (!"play_time" in doc) {
+                doc["play_time"] = 0;
+            };
+
+            doc["play_time"] = updatedObj["play_time"];
         };
     
         if (updatedObj.hasOwnProperty("multiple_ids")) {
-            update["multiple_ids"] = true;
+            doc["multiple_ids"] = true;
         };
     
         if (updatedObj.hasOwnProperty("sessions_length")) {
@@ -333,35 +347,62 @@ export const updateGameFields = async (gameId, updatedObj) => {
                     return { type: "failure", message: "Session length values can only be positive numbers." };
                 };
 
-                if (updatedObj["sessions_length"].length != updatedObj["sessions"]) {
-                    return { type: "failure", message: "Number of sessions and session length should be same." };
+                if (increment === true){
+                    if (updatedObj["sessions_length"].length != updatedObj["sessions"]) {
+                        return { type: "failure", message: "Number of sessions and session length should be same." };
+                    };
+
+                    if (!"sessions_length" in doc) {
+                        doc["sessions_length"] = [];
+                    };
+
+                    doc["sessions_length"] = [...doc["sessions_length"], ...updatedObj["sessions_length"]];
+
+                } else {
+                    doc["sessions_length"] = updatedObj["sessions_length"];
                 };
 
-                update["$push"] = {
-                    "sessions_length": { $each: updatedObj["sessions_length"] }
-                };
             } else {
                 if (updatedObj["sessions_length"] <= 0) {
                     return { type: "failure", message: "Session length values can only be a positive number." };
                 };
 
-                if (updatedObj["sessions"] != 1) {
-                    return { type: "failure", message: "Number of sessions and session length should be same." };
-                };
+                if (increment === true) {
+                    if (updatedObj["sessions"] != 1) {
+                        return { type: "failure", message: "Number of sessions and sessions length should be same." };
+                    };
 
-                update["$push"] = {
-                    "sessions_length": updatedObj["sessions_length"]
+                    if (!"sessions_length" in doc) {
+                        doc["sessions_length"] = [];
+                    };
+
+                    doc["sessions_length"] = [...doc["sessions_length"], updatedObj["sessions_length"]];
+
+                } else {
+                    doc["sessions_length"] = [updatedObj["sessions_length"]];
                 };
             };
         };
-    
-        const doc = await GameData.findOneAndUpdate(query, update, { upsert: true, new: true });
-        
-        if (doc === null) {
-            return { type: "failure", message: doc._id + " could not be updated." };
-        } else {
-            return { type: "success", message: doc._id + " Game Instance has been updated." };
+
+        if ("end_date" in doc) {
+            delete doc._id;
+            delete doc.end_date;
+            delete doc.ending;
+            delete doc.end_data;
+
+            const newDocObj = structuredClone(doc);
+            newDocObj.multiple_ids = true;
+
+            if (!"parent_doc" in newDocObj) {
+                newDocObj.parent_doc = gameId;
+            };
+
+            const newDoc = await GameData.create(newDocObj);
+            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
         };
+        
+        await doc.save();
+        return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
         logger.error(err.name + ": " + err.message);
@@ -419,7 +460,7 @@ export const updateRelationshipData = async (gameId, updatedRelationshipDataKey,
         doc.relationship_data = relationshipData;
         doc.markModified("relationship_data");
 
-        if (doc.hasOwnProperty("end_date")) {
+        if ("end_date" in doc) {
             delete doc._id;
             delete doc.end_date;
             delete doc.ending;
@@ -428,7 +469,7 @@ export const updateRelationshipData = async (gameId, updatedRelationshipDataKey,
             const newDocObj = structuredClone(doc);
             newDocObj.multiple_ids = true;
 
-            if (!newDocObj.hasOwnProperty("parent_doc")) {
+            if (!"parent_doc" in newDocObj) {
                 newDocObj.parent_doc = gameId;
             };
 
@@ -487,7 +528,7 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
         doc.choice_data = choiceData;
         doc.markModified("choice_data");
 
-        if (doc.hasOwnProperty("end_date")) {
+        if ("end_date" in doc) {
             delete doc._id;
             delete doc.end_date;
             delete doc.ending;
@@ -496,7 +537,7 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
             const newDocObj = structuredClone(doc);
             newDocObj.multiple_ids = true;
 
-            if (!newDocObj.hasOwnProperty("parent_doc")) {
+            if (!"parent_doc" in newDocObj) {
                 newDocObj.parent_doc = gameId;
             };
 
@@ -573,7 +614,7 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
         doc.play_data = playData;
         doc.markModified("play_data");
 
-        if (doc.hasOwnProperty("end_date")) {
+        if ("end_date" in doc) {
             delete doc._id;
             delete doc.end_date;
             delete doc.ending;
@@ -582,7 +623,7 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
             const newDocObj = structuredClone(doc);
             newDocObj.multiple_ids = true;
 
-            if (!newDocObj.hasOwnProperty("parent_doc")) {
+            if (!"parent_doc" in newDocObj) {
                 newDocObj.parent_doc = gameId;
             };
 
