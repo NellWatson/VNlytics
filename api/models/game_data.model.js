@@ -318,22 +318,19 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
                 return { type: "failure", message: "Sessions can only be a positive number." };
             };
 
-            if (!"sessions" in doc) {
+            if (doc.sessions === undefined) {
                 doc["sessions"] = 0;
             };
 
             if (increment === true) {
                 doc["sessions"] += updatedObj["sessions"];
+
             } else {
                 doc["sessions"] = updatedObj["sessions"];
             };
         };
     
         if (!updatedObj.hasOwnProperty("play_time")) {
-            if (!"play_time" in doc) {
-                doc["play_time"] = 0;
-            };
-
             doc["play_time"] = updatedObj["play_time"];
         };
     
@@ -343,6 +340,10 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
     
         if (updatedObj.hasOwnProperty("sessions_length")) {
             if (Array.isArray(updatedObj["sessions_length"]) === true) {
+                if (!doc["sessions_length"].every(i => typeof i === "number" && i > 0)) {
+                    return { type: "failure", message: "Session length values can only be positive numbers." };
+                };
+
                 if (!updatedObj["sessions_length"].every(i => typeof i === "number" && i > 0)) {
                     return { type: "failure", message: "Session length values can only be positive numbers." };
                 };
@@ -352,11 +353,7 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
                         return { type: "failure", message: "Number of sessions and session length should be same." };
                     };
 
-                    if (!"sessions_length" in doc) {
-                        doc["sessions_length"] = [];
-                    };
-
-                    doc["sessions_length"] = [...doc["sessions_length"], ...updatedObj["sessions_length"]];
+                    doc["sessions_length"].push(...updatedObj["sessions_length"]);
 
                 } else {
                     doc["sessions_length"] = updatedObj["sessions_length"];
@@ -372,11 +369,7 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
                         return { type: "failure", message: "Number of sessions and sessions length should be same." };
                     };
 
-                    if (!"sessions_length" in doc) {
-                        doc["sessions_length"] = [];
-                    };
-
-                    doc["sessions_length"] = [...doc["sessions_length"], updatedObj["sessions_length"]];
+                    doc["sessions_length"].push(updatedObj["sessions_length"]);
 
                 } else {
                     doc["sessions_length"] = [updatedObj["sessions_length"]];
@@ -384,16 +377,16 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
             };
         };
 
-        if ("end_date" in doc) {
-            delete doc._id;
-            delete doc.end_date;
-            delete doc.ending;
-            delete doc.end_data;
-
-            const newDocObj = structuredClone(doc);
+        if (doc.end_date != undefined) {
+            const newDocObj = doc.toObject();
             newDocObj.multiple_ids = true;
 
-            if (!"parent_doc" in newDocObj) {
+            delete newDocObj._id;
+            delete newDocObj.end_date;
+            delete newDocObj.ending;
+            delete newDocObj.end_data;
+
+            if (newDocObj.parent_doc === undefined) {
                 newDocObj.parent_doc = gameId;
             };
 
@@ -460,16 +453,16 @@ export const updateRelationshipData = async (gameId, updatedRelationshipDataKey,
         doc.relationship_data = relationshipData;
         doc.markModified("relationship_data");
 
-        if ("end_date" in doc) {
-            delete doc._id;
-            delete doc.end_date;
-            delete doc.ending;
-            delete doc.end_data;
-
-            const newDocObj = structuredClone(doc);
+        if (doc.end_date != undefined) {
+            const newDocObj = doc.toObject();
             newDocObj.multiple_ids = true;
 
-            if (!"parent_doc" in newDocObj) {
+            delete newDocObj._id;
+            delete newDocObj.end_date;
+            delete newDocObj.ending;
+            delete newDocObj.end_data;
+
+            if (newDocObj.parent_doc === undefined) {
                 newDocObj.parent_doc = gameId;
             };
 
@@ -528,16 +521,16 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
         doc.choice_data = choiceData;
         doc.markModified("choice_data");
 
-        if ("end_date" in doc) {
-            delete doc._id;
-            delete doc.end_date;
-            delete doc.ending;
-            delete doc.end_data;
-            
-            const newDocObj = structuredClone(doc);
+        if (doc.end_date != undefined) {
+            const newDocObj = doc.toObject();
             newDocObj.multiple_ids = true;
 
-            if (!"parent_doc" in newDocObj) {
+            delete newDocObj._id;
+            delete newDocObj.end_date;
+            delete newDocObj.ending;
+            delete newDocObj.end_data;
+
+            if (newDocObj.parent_doc === undefined) {
                 newDocObj.parent_doc = gameId;
             };
 
@@ -614,16 +607,16 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
         doc.play_data = playData;
         doc.markModified("play_data");
 
-        if ("end_date" in doc) {
-            delete doc._id;
-            delete doc.end_date;
-            delete doc.ending;
-            delete doc.end_data;
-            
-            const newDocObj = structuredClone(doc);
+        if (doc.end_date != undefined) {
+            const newDocObj = doc.toObject();
             newDocObj.multiple_ids = true;
 
-            if (!"parent_doc" in newDocObj) {
+            delete newDocObj._id;
+            delete newDocObj.end_date;
+            delete newDocObj.ending;
+            delete newDocObj.end_data;
+
+            if (newDocObj.parent_doc === undefined) {
                 newDocObj.parent_doc = gameId;
             };
 
