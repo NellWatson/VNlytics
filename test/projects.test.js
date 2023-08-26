@@ -1,10 +1,10 @@
- import chai, { assert } from "chai";
- import chaiHttp from "chai-http";
+import chai, { assert } from "chai";
+import chaiHttp from "chai-http";
 
- import app from "../api/app.js";
- import { disconnectDatabase } from "../api/database.js";
+import app from "../api/app.js";
+import { disconnectDatabase } from "../api/database.js";
 
- const should = chai.should();
+const should = chai.should();
 
 chai.use(chaiHttp);
 
