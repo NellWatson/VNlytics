@@ -76,7 +76,7 @@ describe("Project:", () => {
         };
 
         const res = await chai.request(app)
-            .put("/v1/TestGame")
+            .patch("/v1/TestGame")
             .send(query);
 
         res.should.have.status(200);
