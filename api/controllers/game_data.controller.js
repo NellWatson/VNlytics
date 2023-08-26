@@ -70,7 +70,7 @@ export const addNewGameId = async (req, res) => {
         });
     };
 
-    validatedObjproject_id = req.projectId;
+    validatedObj.project_id = req.projectId;
     try {
         validatedObj.country = geoip.lookup(req.ip).country;
     } catch (err) {
