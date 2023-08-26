@@ -23,7 +23,7 @@ v1.delete("/", deleteAllProjects);
 v1.get("/:_projectId", getOneProject);
 
 // Update the provided project.
-v1.put("/:_projectId", updateProject);
+v1.patch("/:_projectId", updateProject);
 
 // Send back the stats related to the game
 v1.get("/:_projectId/platform", getAllPlatformCount);

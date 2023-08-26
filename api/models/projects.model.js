@@ -65,8 +65,8 @@ export const addProject = async (project) => {
             };
         };
 
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
+        logger.error("ProjectsModel:addProject: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     }
 };
 
@@ -76,8 +76,8 @@ export const getData = async (query) => {
         return { type: "success", data: projects };
 
     } catch (err) {
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
+        logger.error("ProjectsModel:getData: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
 
@@ -92,14 +92,14 @@ export const updateData = async (query, updatedObj) => {
         } else {
             return { type: "success", message: doc.title + " Project has been updated." };
         }
+
     } catch (err) {
         if (err.name === "CastError" && err.path === "_id") {
             return { type: "failure", message: "An invalid ID was provided." };
         };
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
-    }
-    
+        logger.error("ProjectsModel:updateData: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
+    };
 };
 
 export const deleteData = async () => {
@@ -127,8 +127,8 @@ export const byId = async (query) => {
             return { type: "success", message: doc.title + " Project exists." };
         }
     } catch (err) {
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
+        logger.error("ProjectsModel:byId: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
 
@@ -145,10 +145,11 @@ export const countTotalProjects = async () => {
             str_value = `${value} Projects are`
         };
         return { type: "success", message: str_value + " registered with the site.", data: value }
+
     } catch (err) {
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
-    }
-}
+        logger.error("ProjectsModel:countTotalProjects: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
+    };
+};
 
 export default ProjectsData;

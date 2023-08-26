@@ -98,6 +98,183 @@ const gameDataSchema = mongoose.Schema({
 
 const GameData = mongoose.model("gameData", gameDataSchema);
 
+const relationshipDataFunction = (relationshipData, updatedRelationshipDataKey, updatedRelationshipData, increment) => {
+    if (Array.isArray(updatedRelationshipDataKey) === true) {
+        if (updatedRelationshipDataKey.length != updatedRelationshipData.length) {
+            return { type: "failure", message: "Key and data length do not match." };
+        };
+
+        if (!updatedRelationshipDataKey.every(i => typeof i === "string")) {
+            return { type: "failure", message: "Relationship key can only be strings." };
+        };
+
+        if (!updatedRelationshipData.every(i => typeof i === "number")) {
+            return { type: "failure", message: "Relationship value can only be numbers." };
+        };
+
+        for (let i in updatedRelationshipDataKey) {
+            if (relationshipData.hasOwnProperty(updatedRelationshipDataKey[i]) && increment === true) {
+                relationshipData[updatedRelationshipDataKey[i]] += updatedRelationshipData[i];
+            } else {
+                relationshipData[updatedRelationshipDataKey[i]] = updatedRelationshipData[i];
+            };
+        };
+
+    } else {
+        if (typeof updatedRelationshipDataKey != "string") {
+            return { type: "failure", message: "Relationship key can only be a string." };
+        };
+
+        if (typeof updatedRelationshipData != "number") {
+            return { type: "failure", message: "Relationship value can only be a number." };
+        };
+
+        if (relationshipData.hasOwnProperty(updatedRelationshipDataKey) && increment === true) {
+            relationshipData[updatedRelationshipDataKey] += updatedRelationshipData;
+        } else {
+            relationshipData[updatedRelationshipDataKey] = updatedRelationshipData;
+        };
+    };
+
+    return relationshipData;
+};
+
+const choiceDataFunction = (choiceData, updatedChoiceDataKey, updatedChoiceData) => {
+    if (Array.isArray(updatedChoiceDataKey) === true) {
+        if (updatedChoiceDataKey.length != updatedChoiceData.length) {
+            return { type: "failure", message: "Key and data length do not match." };
+        };
+
+        if (!updatedChoiceDataKey.every(i => typeof i === "string")) {
+            return { type: "failure", message: "Choice keys can only be strings." };
+        };
+
+        if (!updatedChoiceData.every(i => typeof i === "string")) {
+            return { type: "failure", message: "Choice values can only be strings." };
+        };
+
+        for (let i in updatedChoiceDataKey) {
+            choiceData[updatedChoiceDataKey[i]] = updatedChoiceData[i];
+        };
+
+    } else {
+        if (typeof updatedChoiceDataKey != "string") {
+            return { type: "failure", message: "Choice key can only be a string." };
+        };
+
+        if (typeof updatedChoiceData != "string") {
+            return { type: "failure", message: "Choice text can only be a string." };
+        };
+
+        choiceData[updatedChoiceDataKey] = updatedChoiceData;
+    };
+
+    return choiceData;
+};
+
+const playDataFunction = (playData, updatedPlayDataKey, updatedPlayData) => {
+    if (Array.isArray(updatedPlayDataKey) === true) {
+        if (updatedPlayDataKey.length != updatedPlayData.length) {
+            return { type: "failure", message: "Key and data length do not match." };
+        };
+
+        if (!updatedPlayDataKey.every(i => typeof i === "string")) {
+            return { type: "failure", message: "Play keys can only be strings." };
+        };
+
+        for (const i in updatedPlayDataKey) {
+            if (!playData.hasOwnProperty(updatedPlayDataKey[i])) {
+                playData[updatedPlayDataKey[i]] = {}
+            };
+
+            if (updatedPlayData[i].constructor != Object) {
+                playData[updatedPlayDataKey[i]] = updatedPlayData;
+                continue;
+            };
+
+            for (const key in updatedPlayData[i]) {
+                playData[updatedPlayDataKey[i]][key] = updatedPlayData[i][key];
+            };
+        };
+        
+    } else {
+        if (typeof updatedPlayDataKey != "string") {
+            return { type: "failure", message: "Play key can only be a string." };
+        };
+
+        if (updatedPlayData.constructor === Object) {
+            for (const key in updatedPlayData) {
+                if (!playData.hasOwnProperty(updatedPlayDataKey)) {
+                    playData[updatedPlayDataKey] = {};
+                };
+
+                playData[updatedPlayDataKey][key] = updatedPlayData[key];
+            };
+
+        } else {
+            playData[updatedPlayDataKey] = updatedPlayData;
+        };
+    };
+
+    return playData;
+};
+
+const updateSessions = (doc, updatedObj, increment) => {
+    if (updatedObj["sessions"] <= 0) {
+        return { type: "failure", message: "Sessions can only be a positive number." };
+    };
+
+    if (doc.sessions === undefined) {
+        doc["sessions"] = 0;
+    };
+
+    if (increment === true) {
+        doc["sessions"] += updatedObj["sessions"];
+
+    } else {
+        doc["sessions"] = updatedObj["sessions"];
+    };
+};
+
+const updateSessionsLengthArray = (doc, updatedObj, increment) => {
+    if (Array.isArray(updatedObj["sessions_length"]) === true) {
+        if (!doc["sessions_length"].every(i => typeof i === "number" && i > 0)) {
+            return { type: "failure", message: "Session length values can only be positive numbers." };
+        };
+
+        if (!updatedObj["sessions_length"].every(i => typeof i === "number" && i > 0)) {
+            return { type: "failure", message: "Session length values can only be positive numbers." };
+        };
+
+        if (increment === true){
+            if (updatedObj["sessions_length"].length != updatedObj["sessions"]) {
+                return { type: "failure", message: "Number of sessions and session length should be same." };
+            };
+
+            doc["sessions_length"].push(...updatedObj["sessions_length"]);
+
+        } else {
+            doc["sessions_length"] = updatedObj["sessions_length"];
+        };
+
+    } else {
+        if (updatedObj["sessions_length"] <= 0) {
+            return { type: "failure", message: "Session length values can only be a positive number." };
+        };
+
+        if (increment === true) {
+            if (updatedObj["sessions"] != 1) {
+                return { type: "failure", message: "Number of sessions and sessions length should be same." };
+            };
+
+            doc["sessions_length"].push(updatedObj["sessions_length"]);
+
+        } else {
+            doc["sessions_length"] = [updatedObj["sessions_length"]];
+        };
+    };
+};
+
 const createPipeline = (field, query) => {
     if ( field === "choices" ) {
         return [
@@ -298,7 +475,7 @@ export const addGameId = async (gameDataObj, callback) => {
         };
 
         logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     }
 };
 
@@ -315,19 +492,10 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
         };
     
         if (updatedObj.hasOwnProperty("sessions")) {
-            if (updatedObj["sessions"] <= 0) {
-                return { type: "failure", message: "Sessions can only be a positive number." };
-            };
+            const error = updateSessions(doc, updatedObj, increment);
 
-            if (doc.sessions === undefined) {
-                doc["sessions"] = 0;
-            };
-
-            if (increment === true) {
-                doc["sessions"] += updatedObj["sessions"];
-
-            } else {
-                doc["sessions"] = updatedObj["sessions"];
+            if (error != undefined && error.type != undefined ) {
+                return { type: error.type, message: error.message };
             };
         };
     
@@ -340,41 +508,10 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
         };
     
         if (updatedObj.hasOwnProperty("sessions_length")) {
-            if (Array.isArray(updatedObj["sessions_length"]) === true) {
-                if (!doc["sessions_length"].every(i => typeof i === "number" && i > 0)) {
-                    return { type: "failure", message: "Session length values can only be positive numbers." };
-                };
+            const error = updateSessionsLengthArray(doc, updatedObj, increment);
 
-                if (!updatedObj["sessions_length"].every(i => typeof i === "number" && i > 0)) {
-                    return { type: "failure", message: "Session length values can only be positive numbers." };
-                };
-
-                if (increment === true){
-                    if (updatedObj["sessions_length"].length != updatedObj["sessions"]) {
-                        return { type: "failure", message: "Number of sessions and session length should be same." };
-                    };
-
-                    doc["sessions_length"].push(...updatedObj["sessions_length"]);
-
-                } else {
-                    doc["sessions_length"] = updatedObj["sessions_length"];
-                };
-
-            } else {
-                if (updatedObj["sessions_length"] <= 0) {
-                    return { type: "failure", message: "Session length values can only be a positive number." };
-                };
-
-                if (increment === true) {
-                    if (updatedObj["sessions"] != 1) {
-                        return { type: "failure", message: "Number of sessions and sessions length should be same." };
-                    };
-
-                    doc["sessions_length"].push(updatedObj["sessions_length"]);
-
-                } else {
-                    doc["sessions_length"] = [updatedObj["sessions_length"]];
-                };
+            if (error != undefined && error.type != undefined ) {
+                return { type: error.type, message: error.message };
             };
         };
 
@@ -399,8 +536,8 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
         return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
+        logger.error("GameModel:updateGameFields: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
 
@@ -412,43 +549,10 @@ export const updateRelationshipData = async (gameId, updatedRelationshipDataKey,
             return { type: "failure", message: doc._id + " could not be found in our records." };
         };
 
-        const relationshipData = doc.relationship_data || {};
-        
-        if (Array.isArray(updatedRelationshipDataKey) === true) {
-            if (updatedRelationshipDataKey.length != updatedRelationshipData.length) {
-                return { type: "failure", message: "Key and data length do not match." };
-            };
+        const relationshipData = relationshipDataFunction(doc.relationship_data || {}, updatedRelationshipDataKey, updatedRelationshipData, increment);
 
-            if (!updatedRelationshipDataKey.every(i => typeof i === "string")) {
-                return { type: "failure", message: "Relationship key can only be strings." };
-            };
-
-            if (!updatedRelationshipData.every(i => typeof i === "number")) {
-                return { type: "failure", message: "Relationship value can only be numbers." };
-            };
-
-            for (let i in updatedRelationshipDataKey) {
-                if (relationshipData.hasOwnProperty(updatedRelationshipDataKey[i]) && increment === true) {
-                    relationshipData[updatedRelationshipDataKey[i]] += updatedRelationshipData[i];
-                } else {
-                    relationshipData[updatedRelationshipDataKey[i]] = updatedRelationshipData[i];
-                };
-            };
-
-        } else {
-            if (typeof updatedRelationshipDataKey != "string") {
-                return { type: "failure", message: "Relationship key can only be a string." };
-            };
-
-            if (typeof updatedRelationshipData != "number") {
-                return { type: "failure", message: "Relationship value can only be a number." };
-            };
-
-            if (relationshipData.hasOwnProperty(updatedRelationshipDataKey) && increment === true) {
-                relationshipData[updatedRelationshipDataKey] += updatedRelationshipData;
-            } else {
-                relationshipData[updatedRelationshipDataKey] = updatedRelationshipData;
-            };
+        if (Object.keys(relationshipData).length === 2 && relationshipData.type != undefined ) {
+            return { type: relationshipData.type, message: relationshipData.message };
         };
 
         doc.relationship_data = relationshipData;
@@ -475,8 +579,8 @@ export const updateRelationshipData = async (gameId, updatedRelationshipDataKey,
         return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
+        logger.error("GameModel:updateRelationshipData: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
 
@@ -488,35 +592,10 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
             return { type: "failure", message: doc._id + " could not be found in our records." };
         };
 
-        const choiceData = doc.choice_data || {};
-        
-        if (Array.isArray(updatedChoiceDataKey) === true) {
-            if (updatedChoiceDataKey.length != updatedChoiceData.length) {
-                return { type: "failure", message: "Key and data length do not match." };
-            };
-
-            if (!updatedChoiceDataKey.every(i => typeof i === "string")) {
-                return { type: "failure", message: "Choice keys can only be strings." };
-            };
-
-            if (!updatedChoiceData.every(i => typeof i === "string")) {
-                return { type: "failure", message: "Choice values can only be strings." };
-            };
-
-            for (let i in updatedChoiceDataKey) {
-                choiceData[updatedChoiceDataKey[i]] = updatedChoiceData[i];
-            };
-
-        } else {
-            if (!updatedChoiceDataKey != "string") {
-                return { type: "failure", message: "Choice key can only be a string." };
-            };
-
-            if (typeof updatedChoiceData != "string") {
-                return { type: "failure", message: "Choice text can only be a string." };
-            };
-
-            choiceData[updatedChoiceDataKey] = updatedChoiceData;
+        const choiceData = choiceDataFunction(doc.choice_data || {}, updatedChoiceDataKey, updatedChoiceData);
+    
+        if (Object.keys(choiceData).length === 2 && choiceData.type != undefined ) {
+            return { type: choiceData.type, message: choiceData.message };
         };
 
         doc.choice_data = choiceData;
@@ -543,8 +622,8 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
         return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
+        logger.error("GameModel:updateChoiceData: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     }
 };
 
@@ -556,53 +635,10 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
             return { type: "failure", message: doc._id + " could not be found in our records." };
         };
 
-        const playData = doc.play_data || {};
-
-        if (Array.isArray(updatedPlayDataKey) === true) {
-            if (updatedPlayDataKey.length != updatedPlayData.length) {
-                return { type: "failure", message: "Key and data length do not match." };
-            };
-
-            if (!updatedPlayDataKey.every(i => typeof i === "string")) {
-                return { type: "failure", message: "Play keys can only be strings." };
-            };
-
-            for (const i in updatedPlayDataKey) {
-                if (!playData.hasOwnProperty(updatedPlayDataKey[i])) {
-                    playData[updatedPlayDataKey[i]] = {}
-                };
-
-                if (updatedPlayData[i].constructor != Object) {
-                    playData[updatedPlayDataKey[i]] = updatedPlayData;
-                    continue;
-                };
-
-                for (const key in updatedPlayData[i]) {
-                    playData[updatedPlayDataKey[i]][key] = updatedPlayData[i][key];
-                };
-            };
-            
-        } else {
-            if (typeof updatedPlayDataKey != "string") {
-                return { type: "failure", message: "Play key can only be a string." };
-            };
-
-            if (updatedPlayData.constructor === Object) {
-                for (const key in updatedPlayData) {
-                    if (!playData.hasOwnProperty(updatedPlayDataKey)) {
-                        playData[updatedPlayDataKey] = {};
-                    };
-
-                    playData[updatedPlayDataKey][key] = updatedPlayData[key];
-                };
-
-            } else {
-                if (typeof updatedPlayDataKey != "string") {
-                    return { type: "failure", message: "Play key can only be a string." };
-                };
+        const playData = playDataFunction(doc.play_data || {}, updatedPlayDataKey, updatedPlayData);
     
-                playData[updatedPlayDataKey] = updatedPlayData;
-            };
+        if (Object.keys(playData).length === 2 && playData.type != undefined ) {
+            return { type: playData.type, message: playData.message };
         };
 
         doc.play_data = playData;
@@ -629,8 +665,8 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
         return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
+        logger.error("GameModel:updatePlayData: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
 
@@ -643,9 +679,92 @@ export const byId = async (query) => {
         } else {
             return { type: "success", message: query._id + " Game Instance exists." };
         }
+
     } catch (err) {
-        logger.error(err.name + ": " + err.message);
-        return { type: "error", message: "Internal Server Error. Contact administrator." }
+        logger.error("GameModel:byId: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
+    };
+};
+
+export const endGame = async (gameId, updatedObj, increment = false) => {
+    try {
+        const doc = await GameData.findById(gameId);
+        
+        if (doc === null) {
+            return { type: "failure", message: gameId + " could not be found in our records." };
+        };
+        
+        if (updatedObj.hasOwnProperty("sessions")) {
+            const error = updateSessions(doc, updatedObj, increment);
+    
+            if (error != undefined && error.type != undefined ) {
+                return { type: error.type, message: error.message };
+            };
+        };
+    
+        if (updatedObj.hasOwnProperty("play_time")) {
+            doc["play_time"] = updatedObj["play_time"];
+        };
+    
+        if (updatedObj.hasOwnProperty("end_date")) {
+            doc["end_date"] = updatedObj["end_date"];
+        };
+    
+        if (updatedObj.hasOwnProperty("ending")) {
+            doc["ending"] = updatedObj["ending"];
+        };
+    
+        if (updatedObj.hasOwnProperty("end_data")) {
+            doc["end_data"] = updatedObj["end_data"];
+        };
+    
+        if (updatedObj.hasOwnProperty("sessions_length")) {
+            const error = updateSessionsLengthArray(doc, updatedObj, increment);
+    
+            if (error != undefined && error.type != undefined ) {
+                return { type: error.type, message: error.message };
+            };
+        };
+    
+        if (updatedObj.hasOwnProperty("relationship_data")) {
+            const relationshipData = relationshipDataFunction(doc.relationship_data || {}, updatedObj.relationship_data.key, updatedObj.relationship_data.data, increment);
+    
+            if (Object.keys(relationshipData).length === 2 && relationshipData.type != undefined ) {
+                return { type: relationshipData.type, message: relationshipData.message };
+            };
+    
+            doc.relationship_data = relationshipData;
+            doc.markModified("relationship_data");
+        };
+    
+        if (updatedObj.hasOwnProperty("choice_data")) {
+            const choiceData = choiceDataFunction(doc.choice_data || {}, updatedObj.choice_data.key, updatedObj.choice_data.data);
+    
+            if (Object.keys(choiceData).length === 2 && choiceData.type != undefined ) {
+                return { type: choiceData.type, message: choiceData.message };
+            };
+    
+            doc.choice_data = choiceData;
+            doc.markModified("choice_data");
+        };
+    
+        if (updatedObj.hasOwnProperty("play_data")) {
+            const playData = playDataFunction(doc.choice_data || {}, updatedObj.playData.key, updatedObj.playData.data);
+    
+            if (Object.keys(playData).length === 2 && playData.type != undefined ) {
+                return { type: playData.type, message: playData.message };
+            };
+    
+            doc.play_data = playData;
+            doc.markModified("play_data");
+        };
+        
+        await doc.save();
+        return { type: "success", message: doc._id + " Game Instance has been marked as finished." };
+
+    } catch (err) {
+        logger.error("GameModel:endGame: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
 

@@ -24,7 +24,17 @@ export default {
         "sessions_length": ["number", "array"],
         "increment": ["boolean"]
     },
-    allowedUpdateMethods: ["play", "relationship", "choice"],
+    endGameDataFields: {
+        "play_time": ["number"],
+        "ending": ["string"],
+        "sessions": ["number"],
+        "sessions_length": ["number", "array"],
+        "end_data": ["object"],
+        "relationship_data": ["object"],
+        "choice_data": ["object"],
+        "play_data": ["object"],
+    },
+    allowedUpdateMethods: ["self", "play", "relationship", "choice"],
     minProjectIdLength: 8,
     maxProjectIdLength: 24
 };

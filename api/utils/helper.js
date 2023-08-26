@@ -1,11 +1,17 @@
 // This function strips out all the unwanted entries from postData
 const helperFunctions = {
-    validateBody: (allowedKeys, postData, matchhAll = false) => {
+    validateBody: (allowedKeys, postData, matchhAll = false, requiredKeys = []) => {
         let _temp = {};
         const extraKeys = Object.keys(postData).filter(x => Object.keys(allowedKeys).includes(x) === false);
+        const missingRequiredKeys = requiredKeys.filter(x => Object.keys(postData).includes(x) === false);
 
         if (extraKeys.length != 0) {
             _temp["extra"] = extraKeys;
+            return _temp;
+        };
+
+        if (missingRequiredKeys.length != 0) {
+            _temp["missing_required"] = extraKeys;
             return _temp;
         };
 
@@ -48,6 +54,12 @@ const helperFunctions = {
             };
         };
         return _temp;
+    },
+
+    contains: (arr1, arr2) => {
+        return arr2.every(x => {
+            return arr1.includes(x)
+        });
     },
 
     // Checks if an object is empty

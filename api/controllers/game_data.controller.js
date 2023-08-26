@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 // Load the models
 import ProjectsData from "../models/projects.model.js";
-import GameData, { addGameId, byId, updateChoiceData, updateGameFields, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
+import GameData, { addGameId, byId, endGame, updateChoiceData, updateGameFields, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
 
 // Load helper function
 import helper from "../utils/helper.js";
@@ -36,7 +36,7 @@ export const checkIfPathValid = async(req, res, next) => {
     };
 
     // Make sure that the body is not empty.
-    if (helper.isEmpty(req.body)) {
+    if (req.method != "GET" && helper.isEmpty(req.body)) {
         return res.status(400).json({
             type: "failure",
             message: "Please send data to be updated with your request."
@@ -131,23 +131,110 @@ export const getById = async (req, res) => {
     } else if ( data.type === "success" ) {
         res.status(200).json(data);
     };
-}
+};
 
-export const updateGameData = async (req, res) => {
-    if (req.body.type === undefined || req.body.type === "") {
+export const updateGameDataBatch = async (req, res) => {
+    if (req.body === undefined || !Array.isArray(req.body)) {
         return res.status(400).json({
             type: "failure",
-            message: "Please provide a update type with your request."
+            message: "Invalid batch data."
         });
     };
 
-    if (!CONSTANT.allowedUpdateMethods.includes(req.body.type)) {
-        return res.status(400).json({
-            type: "failure",
-            message: "Please provide a correct update type with your request."
-        });
-    }
+    const results = {};
+    
+    for (const i in req.body) {
+        const body = req.body[i];
 
+        if (body.type === "self") {
+            const validatedObj = helper.validateBody(CONSTANT.gameDataUpdatableFields, body.data);
+        
+            if ("extra" in validatedObj) {
+                return res.status(400).json({
+                    type: "failure",
+                    message: `Extra data is provided with the request: ${validatedObj.extra}`
+                });
+            };
+        
+            if ("error" in validatedObj) {
+                return res.status(400).json({
+                    type: "failure",
+                    message: `Following keys have invalid value types: ${validatedObj.error}`
+                });
+            };
+        
+            const increment = body.increment || false;
+            results[body.type] = await updateGameFields(req.params._gameId, validatedObj, increment);        
+
+        } else if (body.type === "relationship") {
+            if (body.key === undefined || body.key === "") {
+                return res.status(400).json({
+                    type: "failure",
+                    message: "Please provide a key for this update with your request."
+                });
+            };
+        
+            if (body.data === undefined || body.data === "") {
+                return res.status(400).json({
+                    type: "failure",
+                    message: "Please provide data for this update with your request."
+                });
+            };
+        
+            const increment = body.increment || false;
+            results[body.type] = await updateRelationshipData(req.params._gameId, body.key, body.data, increment);
+
+        } else if (body.type === "choice") {
+            if (body.key === undefined || body.key === "") {
+                return res.status(400).json({
+                    type: "failure",
+                    message: "Please provide a key for this update with your request."
+                });
+            };
+        
+            if (body.data === undefined || body.data === "") {
+                return res.status(400).json({
+                    type: "failure",
+                    message: "Please provide data for this update with your request."
+                });
+            };
+        
+            results[body.type] = await updateChoiceData(req.params._gameId, body.key, body.data);
+
+        } else if (body.type === "play") {
+            if (body.key === undefined || body.key === "") {
+                return res.status(400).json({
+                    type: "failure",
+                    message: "Please provide a key for this update with your request."
+                });
+            };
+        
+            if (body.data === undefined || body.data === "") {
+                return res.status(400).json({
+                    type: "failure",
+                    message: "Please provide data for this update with your request."
+                });
+            };
+        
+            results[body.type] = await updatePlayData(req.params._gameId, body.key, body.data);
+        };
+    };
+
+    if (Object.values(results).every(item => item.type === "success")) {
+        res.status(200).json(results);
+
+    } else if (Object.values(results).every(item => item.type === "failure")) {
+        res.status(400).json(results);
+
+    } else if (Object.values(results).every(item => item.type === "error")) {
+        res.status(500).json(results);
+
+    } else {
+        res.status(210).json(results);
+    };
+};
+
+export const updateGameRelationshipData = async (req, res) => {
     if (req.body.key === undefined || req.body.key === "") {
         return res.status(400).json({
             type: "failure",
@@ -155,27 +242,105 @@ export const updateGameData = async (req, res) => {
         });
     };
 
-    if (req.body.data === undefined || req.body.data === "" || req.body.data === {} || req.body.data === []) {
+    if (req.body.data === undefined || req.body.data === "") {
         return res.status(400).json({
             type: "failure",
             message: "Please provide data for this update with your request."
         });
     };
 
-    var data = null;
-    if (req.body.type === "relationship") {
-        const increment = req.body.increment || false;
-        data = await updateRelationshipData(req.params._gameId, req.body.key, req.body.data, increment);
-    } else if (req.body.type === "choice") {
-        data = await updateChoiceData(req.params._gameId, req.body.key, req.body.data);
-    } else if (req.body.type === "play") {
-        data = await updatePlayData(req.params._gameId, req.body.key, req.body.data);
-    } else {
-        res.status(400).json({
+    const increment = req.body.increment || false;
+    const data = await updateRelationshipData(req.params._gameId, req.body.key, req.body.data, increment);
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
+};
+
+export const updateGameChoiceData = async (req, res) => {
+    if (req.body.key === undefined || req.body.key === "") {
+        return res.status(400).json({
             type: "failure",
-            message: "Please provide a valid type for this update with your request."
+            message: "Please provide a key for this update with your request."
         });
     };
+
+    if (req.body.data === undefined || req.body.data === "") {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide data for this update with your request."
+        });
+    };
+
+    const data = await updateChoiceData(req.params._gameId, req.body.key, req.body.data);
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
+};
+
+export const updateGamePlayData = async (req, res) => {
+    if (req.body.key === undefined || req.body.key === "") {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide a key for this update with your request."
+        });
+    };
+
+    if (req.body.data === undefined || req.body.data === "") {
+        return res.status(400).json({
+            type: "failure",
+            message: "Please provide data for this update with your request."
+        });
+    };
+
+    const data = await updatePlayData(req.params._gameId, req.body.key, req.body.data);
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
+};
+
+export const endGameData = async (req, res) => {
+    const validatedObj = helper.validateBody(CONSTANT.endGameDataFields, req.body, ["play_time", "ending", "sessions", "sessions_length"]);
+
+    if ("extra" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Extra data is provided with the request: ${validatedObj.extra}`
+        });
+    };
+
+    if ("missing_required" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Required keys are missing from the request: ${validatedObj.missing_required}`
+        });
+    };
+
+    if ("error" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Following keys have invalid value types: ${validatedObj.error}`
+        });
+    };
+
+    validatedObj.end_date = new Date().toISOString();
+
+    const increment = req.body.increment || false;
+    const data = await endGame(req.params._gameId, validatedObj, increment);
 
     if (data.type === "error") {
         res.status(500).json(data);

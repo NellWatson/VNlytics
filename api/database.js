@@ -17,10 +17,10 @@ const connectToDatabase = async () => {
         dbUrl
     ).then(() => {
         logger.info("Connected to MongoDB Database.");
-    }).catch(error => {
-        logger.error(error);
+    }).catch(err => {
+        logger.error("While Connecting: " + err);
     });
-}
+};
 
 export default connectToDatabase;
 
@@ -31,6 +31,6 @@ export const disconnectDatabase = async () => {
             await mongod.stop();
         };
     } catch (err) {
-        logger.error(err);
+        logger.error("While Disconnecting: " + err);
     }
-}
+};
