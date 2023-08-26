@@ -16,7 +16,28 @@ export const invalidProjectId = (req, res) => {
 };
 
 export const createNewProject = async (req, res) => {
-    const project = req.body;
+    const validatedObj = helper.validateBody(CONSTANT.projectDataInitFields, req.body, true);
+
+    if ("extra" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Extra data is provided with the request: ${validatedObj.extra}`
+        });
+    };
+
+    if ("error" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Following keys have invalid value types: ${validatedObj.error}`
+        });
+    };
+
+    if ("missing" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Following keys are missing from the request: ${validatedObj.missing}`
+        });
+    };
 
     if (req.header("Create-Project-Auth") != process.env.CREATE_NEW_PROJECT_KEY) {
         return res.status(400).json({
@@ -25,7 +46,7 @@ export const createNewProject = async (req, res) => {
         });
     };
     
-    const data = await addProject(project);
+    const data = await addProject(validatedObj);
 
     if (data.type === "error") {
         res.status(500).json(data);
@@ -42,7 +63,7 @@ export const updateProject = async (req, res) => {
         project_id: req.params._projectId
     };
     delete req.body.id;
-    const validatedObj = helper.validateBody( CONSTANT.projectUpdatableFields, req.body );
+    const validatedObj = helper.validateBody(CONSTANT.projectUpdatableFields, req.body);
 
     if (query._id === null || query._id === undefined) {
         return res.status(400).json({

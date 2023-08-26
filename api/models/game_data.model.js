@@ -8,7 +8,8 @@ const gameDataSchema = mongoose.Schema({
     },
     platform: {
         type: String,
-        required: true
+        required: true,
+        cast: false
     },
     display_size: {
         type: String,

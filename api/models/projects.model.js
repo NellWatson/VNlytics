@@ -7,16 +7,19 @@ const projectSchema = mongoose.Schema({
         required: true,
         unique: true,
         minlength: 8,
-        maxlength: 24,
-        index: true
+        maxlength: 32,
+        index: true,
+        cast: false
     },
     title: {
         type: String,
-        required: true
+        required: true,
+        cast: false
     },
     developer: {
         type: String,
-        required: true
+        required: true,
+        cast: false
     },
     description: {
         type: String
@@ -29,7 +32,8 @@ const projectSchema = mongoose.Schema({
     },
     engine: {
         type: String,
-        required: true
+        required: true,
+        cast: false
     },
     created: {
         type: Date,
@@ -48,9 +52,19 @@ export const addProject = async (project) => {
     } catch (err) {
         if (err.name == "MongoServerError" && err.code == 11000) {
             return { type: "failure", message: "Project with this ID already exists!" };
+
         } else if (err.name === "ValidationError") {
-            return { type: "failure", message: "Required parameters are not provided for creating a new project." };
+            if (err.message.includes("Cast to")) {
+                return { type: "failure", message: "Provided properties should be of the correct type." };
+
+            } else if (err._message == "ProjectsData validation failed") {
+                return { type: "failure", message: "Project ID should be between 8 to 32 characters." };
+
+            } else {
+                return { type: "failure", message: "Required parameters are not provided for creating a new project." };
+            };
         };
+
         logger.error(err.name + ": " + err.message);
         return { type: "error", message: "Internal Server Error. Contact administrator." }
     }

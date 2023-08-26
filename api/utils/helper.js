@@ -1,7 +1,13 @@
 // This function strips out all the unwanted entries from postData
 const helperFunctions = {
-    validateBody: (allowedKeys, postData) => {
+    validateBody: (allowedKeys, postData, matchhAll = false) => {
         let _temp = {};
+        const extraKeys = Object.keys(postData).filter(x => Object.keys(allowedKeys).includes(x) === false);
+
+        if (extraKeys.length != 0) {
+            _temp["extra"] = extraKeys;
+            return _temp;
+        };
 
         for (const key in allowedKeys) {
             if (key in postData) {
@@ -28,6 +34,16 @@ const helperFunctions = {
                             _temp["error"] = [key];
                         };
                     };
+                };
+            } else {
+                if (!matchhAll) {
+                    continue;
+                };
+
+                if ("missing" in _temp) {
+                    _temp["missing"].push(key);
+                } else {
+                    _temp["missing"] = [key];
                 };
             };
         };
@@ -58,7 +74,7 @@ const helperFunctions = {
             _temp.push( Object.keys(i) );
         };
 
-        return _temp
+        return _temp;
     },
 
     sanitise: function(obj) {

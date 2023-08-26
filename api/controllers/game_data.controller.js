@@ -7,7 +7,7 @@ import GameData, { addGameId, byId, updateChoiceData, updateGameFields, updateRe
 
 // Load helper function
 import helper from "../utils/helper.js";
-import constants from "../utils/constants.js";
+import CONSTANT from "../utils/constants.js";
 
 export const checkIfPathValid = async(req, res, next) => {
     // Check if the Project ID is in the file.
@@ -47,14 +47,37 @@ export const checkIfPathValid = async(req, res, next) => {
 };
 
 export const addNewGameId = async (req, res) => {
-    req.body.project_id = req.projectId;
-    try {
-        req.body.country = geoip.lookup(req.ip).country;
-    } catch (err) {
-        req.body.country = "local";
+    const validatedObj = helper.validateBody(CONSTANT.gameDataInitFields, req.body, true);
+
+    if ("extra" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Extra data is provided with the request: ${validatedObj.extra}`
+        });
     };
 
-    const data = await addGameId(req.body);
+    if ("error" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Following keys have invalid value types: ${validatedObj.error}`
+        });
+    };
+
+    if ("missing" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Following keys are missing from the request: ${validatedObj.missing}`
+        });
+    };
+
+    validatedObjproject_id = req.projectId;
+    try {
+        validatedObj.country = geoip.lookup(req.ip).country;
+    } catch (err) {
+        validatedObj.country = "local";
+    };
+
+    const data = await addGameId(validatedObj);
 
     if (data.type === "error") {
         res.status(500).json(data);
@@ -66,19 +89,19 @@ export const addNewGameId = async (req, res) => {
 };
 
 export const updateGameInstanceData = async (req, res) => {
-    const validatedObj = helper.validateBody(constants.gameDataUpdatableFields, req.body);
+    const validatedObj = helper.validateBody(CONSTANT.gameDataUpdatableFields, req.body);
 
-    if (helper.isEmpty(validatedObj)) {
+    if ("extra" in validatedObj) {
         return res.status(400).json({
             type: "failure",
-            message: "Please send data to be updated with your request."
+            message: `Extra data is provided with the request: ${validatedObj.extra}`
         });
     };
 
     if ("error" in validatedObj) {
         return res.status(400).json({
             type: "failure",
-            message: `Follwing keys have invalid value types: ${validatedObj.error}.`
+            message: `Following keys have invalid value types: ${validatedObj.error}`
         });
     };
 
@@ -118,7 +141,7 @@ export const updateGameData = async (req, res) => {
         });
     };
 
-    if (!constants.allowedUpdateMethods.includes(req.body.type)) {
+    if (!CONSTANT.allowedUpdateMethods.includes(req.body.type)) {
         return res.status(400).json({
             type: "failure",
             message: "Please provide a correct update type with your request."
