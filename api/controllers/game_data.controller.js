@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 // Load the models
 import ProjectsData from "../models/projects.model.js";
-import GameData, { addGameId, byId, endGame, updateChoiceData, updateGameFields, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
+import { addGameId, byId, deleteData, endGame, updateChoiceData, updateGameFields, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
 
 // Load helper function
 import helper from "../utils/helper.js";
@@ -33,6 +33,11 @@ export const checkIfPathValid = async(req, res, next) => {
             type: "failure",
             message: "Please provide a valid Game ID."
         });
+    };
+
+    if (req.method == "DELETE") {
+        next();
+        return;
     };
 
     // Make sure that the body is not empty.
@@ -118,7 +123,15 @@ export const updateGameInstanceData = async (req, res) => {
 };
 
 export const deleteGameInstance = async (req, res) => {
+    const data = await deleteData(req.params._gameId);
 
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
 };
 
 export const getById = async (req, res) => {
@@ -150,73 +163,101 @@ export const updateGameDataBatch = async (req, res) => {
             const validatedObj = helper.validateBody(CONSTANT.gameDataUpdatableFields, body.data);
         
             if ("extra" in validatedObj) {
-                return res.status(400).json({
+                results[body.type] = {
                     type: "failure",
                     message: `Extra data is provided with the request: ${validatedObj.extra}`
-                });
+                };
+                continue;
             };
         
             if ("error" in validatedObj) {
-                return res.status(400).json({
+                results[body.type] = {
                     type: "failure",
                     message: `Following keys have invalid value types: ${validatedObj.error}`
-                });
+                };
+                continue;
             };
         
             const increment = body.increment || false;
-            results[body.type] = await updateGameFields(req.params._gameId, validatedObj, increment);        
+            results[body.type] = await updateGameFields(req.params._gameId, validatedObj, increment);
+
+            if (results[body.type].data != undefined && results[body.type].data._id != undefined) {
+                req.params._gameId = results[body.type].data._id;
+                results._id = results[body.type].data._id;
+            };
 
         } else if (body.type === "relationship") {
             if (body.key === undefined || body.key === "") {
-                return res.status(400).json({
+                results[body.type] = {
                     type: "failure",
                     message: "Please provide a key for this update with your request."
-                });
+                };
+                continue;
             };
         
             if (body.data === undefined || body.data === "") {
-                return res.status(400).json({
+                results[body.type] = {
                     type: "failure",
                     message: "Please provide data for this update with your request."
-                });
+                };
+                continue;
             };
         
             const increment = body.increment || false;
             results[body.type] = await updateRelationshipData(req.params._gameId, body.key, body.data, increment);
 
+            if (results[body.type].data != undefined && results[body.type].data._id != undefined) {
+                req.params._gameId = results[body.type].data._id;
+                results._id = results[body.type].data._id;
+            };
+
         } else if (body.type === "choice") {
             if (body.key === undefined || body.key === "") {
-                return res.status(400).json({
+                results[body.type] = {
                     type: "failure",
                     message: "Please provide a key for this update with your request."
-                });
+                };
+                continue;
             };
         
             if (body.data === undefined || body.data === "") {
-                return res.status(400).json({
+                results[body.type] = {
                     type: "failure",
                     message: "Please provide data for this update with your request."
-                });
+                };
+                continue;
             };
         
             results[body.type] = await updateChoiceData(req.params._gameId, body.key, body.data);
 
+            if (results[body.type].data != undefined && results[body.type].data._id != undefined) {
+                req.params._gameId = results[body.type].data._id;
+                results._id = results[body.type].data._id;
+            };
+
         } else if (body.type === "play") {
             if (body.key === undefined || body.key === "") {
-                return res.status(400).json({
+                results[body.type] = {
                     type: "failure",
                     message: "Please provide a key for this update with your request."
-                });
+                };
+                continue;
             };
         
             if (body.data === undefined || body.data === "") {
-                return res.status(400).json({
+                results[body.type] = {
                     type: "failure",
                     message: "Please provide data for this update with your request."
-                });
+                };
+                continue;
             };
         
             results[body.type] = await updatePlayData(req.params._gameId, body.key, body.data);
+
+            if (results[body.type].data != undefined && results[body.type].data._id != undefined) {
+                req.params._gameId = results[body.type].data._id;
+                results._id = results[body.type].data._id;
+            };
         };
     };
 

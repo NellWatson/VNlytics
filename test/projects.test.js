@@ -1,14 +1,12 @@
-import chai, { assert } from "chai";
+import chai from "chai";
 import chaiHttp from "chai-http";
 
 import app from "../api/app.js";
-import { disconnectDatabase } from "../api/database.js";
 
 const should = chai.should();
-
 chai.use(chaiHttp);
 
-const project_ids = {}
+const project_ids = {};
 
 describe("Project:", () => {
     before(async () => {
@@ -108,8 +106,4 @@ describe("Project:", () => {
         res.should.have.status(200);
         res.body.should.have.property("data").eql(2);
     });
-
-    after(async () => {
-        disconnectDatabase();
-    });
-})
+});

@@ -246,11 +246,11 @@ const updateSessionsLengthArray = (doc, updatedObj, increment) => {
             return { type: "failure", message: "Session length values can only be positive numbers." };
         };
 
-        if (increment === true){
-            if (updatedObj["sessions_length"].length != updatedObj["sessions"]) {
-                return { type: "failure", message: "Number of sessions and session length should be same." };
-            };
+        if (updatedObj["sessions_length"].length != updatedObj["sessions"]) {
+            return { type: "failure", message: "Number of sessions and session length should be same." };
+        };
 
+        if (increment === true) {
             doc["sessions_length"].push(...updatedObj["sessions_length"]);
 
         } else {
@@ -262,11 +262,11 @@ const updateSessionsLengthArray = (doc, updatedObj, increment) => {
             return { type: "failure", message: "Session length values can only be a positive number." };
         };
 
-        if (increment === true) {
-            if (updatedObj["sessions"] != 1) {
-                return { type: "failure", message: "Number of sessions and sessions length should be same." };
-            };
+        if (updatedObj["sessions"] != 1) {
+            return { type: "failure", message: "Number of sessions and sessions length should be same." };
+        };
 
+        if (increment === true) {
             doc["sessions_length"].push(updatedObj["sessions_length"]);
 
         } else {
@@ -474,13 +474,24 @@ export const addGameId = async (gameDataObj, callback) => {
             return { type: "failure", message: "Required parameters are not provided for creating a new game instance." };
         };
 
-        logger.error(err.name + ": " + err.message);
+        logger.error("GameModel:addGameId: " + err.name + ": " + err.message);
         return { type: "error", message: "Internal Server Error. Contact administrator." };
     }
 };
 
-export const getData = (callback, limit) => {
-    GameData.find(callback).limit(limit);
+export const deleteData = async (gameId) => {
+    try {
+        const doc = await GameData.deleteOne({ _id: gameId });
+        if (doc.deletedCount > 0) {
+            return { type: "success", message: "Game Instance was successfully deleted." };
+        } else {
+            return { type: "failure", message: "Game Instance with this ID was not found." };
+        };
+
+    } catch (err) {
+        logger.error("GameModel:deleteData: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
+    }
 };
 
 export const updateGameFields = async (gameId, updatedObj, increment = false) => {
