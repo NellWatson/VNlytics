@@ -499,7 +499,7 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
         const doc = await GameData.findById(gameId);
         
         if (doc === null) {
-            return { type: "failure", message: doc._id + " could not be found in our records." };
+            return { type: "failure", message: gameId + " could not be found in our records." };
         };
     
         if (updatedObj.hasOwnProperty("sessions")) {
@@ -510,7 +510,11 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
             };
         };
     
-        if (!updatedObj.hasOwnProperty("play_time")) {
+        if (updatedObj.hasOwnProperty("play_time")) {
+            if (updatedObj["play_time"] <= 0) {
+                return { type: "failure", message: "play_time can only be a positive number." };
+            };
+
             doc["play_time"] = updatedObj["play_time"];
         };
     
@@ -557,7 +561,7 @@ export const updateRelationshipData = async (gameId, updatedRelationshipDataKey,
         const doc = await GameData.findById(gameId);
         
         if (doc === null) {
-            return { type: "failure", message: doc._id + " could not be found in our records." };
+            return { type: "failure", message: gameId + " could not be found in our records." };
         };
 
         const relationshipData = relationshipDataFunction(doc.relationship_data || {}, updatedRelationshipDataKey, updatedRelationshipData, increment);
@@ -600,7 +604,7 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
         const doc = await GameData.findById(gameId);
         
         if (doc === null) {
-            return { type: "failure", message: doc._id + " could not be found in our records." };
+            return { type: "failure", message: gameId + " could not be found in our records." };
         };
 
         const choiceData = choiceDataFunction(doc.choice_data || {}, updatedChoiceDataKey, updatedChoiceData);
@@ -643,7 +647,7 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
         const doc = await GameData.findById(gameId);
         
         if (doc === null) {
-            return { type: "failure", message: doc._id + " could not be found in our records." };
+            return { type: "failure", message: gameId + " could not be found in our records." };
         };
 
         const playData = playDataFunction(doc.play_data || {}, updatedPlayDataKey, updatedPlayData);
@@ -714,6 +718,10 @@ export const endGame = async (gameId, updatedObj, increment = false) => {
         };
     
         if (updatedObj.hasOwnProperty("play_time")) {
+            if (updatedObj["play_time"] <= 0) {
+                return { type: "failure", message: "play_time can only be a positive number." };
+            };
+
             doc["play_time"] = updatedObj["play_time"];
         };
     

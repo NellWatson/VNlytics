@@ -95,7 +95,7 @@ describe("Game Instances (that should all return 200):", () => {
         const data = {
             "key": "first_chara",
             "data": 1
-        };        
+        };    
 
         const res = await chai.request(app)
             .patch("/v1/TestGame/" + gameIds[0] + "/relationship")
@@ -110,7 +110,7 @@ describe("Game Instances (that should all return 200):", () => {
         const data = {
             "key": ["second_chara", "third_chara"],
             "data": [10, 8]
-        };        
+        };    
 
         const res = await chai.request(app)
             .patch("/v1/TestGame/" + gameIds[0] + "/relationship")
@@ -128,7 +128,7 @@ describe("Game Instances (that should all return 200):", () => {
                 "first_data_key": "FIRST",
                 "second_data_key": "This is fourth"
             }
-        };        
+        };    
 
         const res = await chai.request(app)
             .patch("/v1/TestGame/" + gameIds[0] + "/play")
@@ -211,7 +211,7 @@ describe("Game Instances (that should all return 200):", () => {
 
     it("Delete the second Game Instance", async () => {
         const res = await chai.request(app)
-            .delete("/v1/TestGame/" + gameIds[0]);
+            .delete("/v1/TestGame/" + gameIds[1]);
 
         res.should.have.status(200);
         res.body.should.be.a("object");
@@ -220,109 +220,199 @@ describe("Game Instances (that should all return 200):", () => {
 });
 
 describe("Game Instances (that should all return 400):", () => {
-    it("Add first Game Instance without a required parameter", async () => {
-        const data = {
-            "platform": "Windows"
-        };
+    describe("Tests for / endpoint", () => {
+        it("Try to add first Game Instance without a required parameter", async () => {
+            const data = {
+                "platform": "Windows"
+            };
 
-        const res = await chai.request(app)
-            .post("/v1/TestGame")
-            .send(data);
+            const res = await chai.request(app)
+                .post("/v1/TestGame")
+                .send(data);
 
-        res.should.have.status(400);
-        res.body.should.be.a("object");
-        res.body.should.have.property("type").eql("failure");
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Following keys are missing from the request: display_size");
+        });
+
+        it("Try to add first Game Instance with an extra parameter", async () => {
+            const data = {
+                "platform": "Windows",
+                "display_size": "(1920*1080)",
+                "random": 1234
+            };
+
+            const res = await chai.request(app)
+                .post("/v1/TestGame")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Extra data is provided with the request: random");
+        });
+
+        it("Try to add first Game Instance with a wrong value type for parameter", async () => {
+            const data = {
+                "platform": "Windows",
+                "display_size": 1920
+            };
+
+            const res = await chai.request(app)
+                .post("/v1/TestGame")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Following keys have invalid value types: display_size");
+        });
     });
 
-    it("Add first Game Instance with an extra parameter", async () => {
-        const data = {
-            "platform": "Windows",
-            "display_size": "(1920*1080)",
-            "random": 1234
-        };
+    describe("Tests for /:gameId endpoint", () => {
+        it("Try to update the Game Instance with a wrong value type session", async () => {
+            const data = {
+                "sessions": "4",
+                "sessions_length": [1222, 465, 48464, 556]
+            };
 
-        const res = await chai.request(app)
-            .post("/v1/TestGame")
-            .send(data);
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0])
+                .send(data);
 
-        res.should.have.status(400);
-        res.body.should.be.a("object");
-        res.body.should.have.property("type").eql("failure");
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Following keys have invalid value types: sessions");
+        });
+
+        it("Try to update the Game Instance with a negative value in session length", async () => {
+            const data = {
+                "sessions": 4,
+                "sessions_length": [-1222, 465, -48464, 556]
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0])
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Session length values can only be positive numbers.");
+        });
+
+        it("Try to update the Game Instance with an unequal number of sessions and session_length", async () => {
+            const data = {
+                "sessions": 3,
+                "sessions_length": [1222, 465, 48464, 556]
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0])
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Number of sessions and session length should be same.");
+        });
+
+        it("Try to update the Game Instance with a negative value in play time", async () => {
+            const data = {
+                "play_time": -5245
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0])
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("play_time can only be a positive number.");
+        });
     });
 
-    it("Add first Game Instance with a wrong value type for parameter", async () => {
-        const data = {
-            "platform": "Windows",
-            "display_size": 1920
-        };
+    describe("Tests for /:gameId/choice endpoint", () => {
+        it("Try to update the Game Instance without giving key property in choice data", async () => {
+            const data = {
+                "data": 1234
+            };
 
-        const res = await chai.request(app)
-            .post("/v1/TestGame")
-            .send(data);
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/choice")
+                .send(data);
 
-        res.should.have.status(400);
-        res.body.should.be.a("object");
-        res.body.should.have.property("type").eql("failure");
-    });
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Please provide a key for this update with your request.");
+        });
 
-    it("Update the Game Instance with a wrong value type session", async () => {
-        const data = {
-            "sessions": "4",
-            "sessions_length": [1222, 465, 48464, 556]
-        };
+        it("Try to update the Game Instance without giving data property in choice data", async () => {
+            const data = {
+                "key": 1234
+            };
 
-        const res = await chai.request(app)
-            .patch("/v1/TestGame/" + gameIds[0])
-            .send(data);
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/choice")
+                .send(data);
 
-        res.should.have.status(400);
-        res.body.should.be.a("object");
-        res.body.should.have.property("type").eql("failure");
-    });
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Please provide data for this update with your request.");
+        });
 
-    it("Update the Game Instance with a negative value in session length", async () => {
-        const data = {
-            "sessions": "4",
-            "sessions_length": [-1222, 465, -48464, 556]
-        };
+        it("Try to update the Game Instance with non string value type for key in choice data", async () => {
+            const data = {
+                "key": 1234,
+                "data": "Third Choice: Option 2"
+            };
 
-        const res = await chai.request(app)
-            .patch("/v1/TestGame/" + gameIds[0])
-            .send(data);
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/choice")
+                .send(data);
 
-        res.should.have.status(400);
-        res.body.should.be.a("object");
-        res.body.should.have.property("type").eql("failure");
-    });
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Choice key can only be a string.");
+        });
 
-    it("Update the Game Instance with non string value type for key in choice data", async () => {
-        const data = {
-            "key": 1234,
-            "data": "Third Choice: Option 2"
-        };
+        it("Try to update the Game Instance with non string value type for data in choice data", async () => {
+            const data = {
+                "key": "third_choice",
+                "data": 1234
+            };
 
-        const res = await chai.request(app)
-            .patch("/v1/TestGame/" + gameIds[0] + "/choice")
-            .send(data);
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/choice")
+                .send(data);
 
-        res.should.have.status(400);
-        res.body.should.be.a("object");
-        res.body.should.have.property("type").eql("failure");
-    });
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Choice text can only be a string.");
+        });
 
-    it("Update the Game Instance with non string value type for data in choice data", async () => {
-        const data = {
-            "key": "third_choice",
-            "data": 1234
-        };
+        it("Try to update the Game Instance with multiple key values and less data values in choice data", async () => {
+            const data = {
+                "key": ["second_choice", "third_choice"],
+                "data": 1234
+            };
 
-        const res = await chai.request(app)
-            .patch("/v1/TestGame/" + gameIds[0] + "/choice")
-            .send(data);
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/choice")
+                .send(data);
 
-        res.should.have.status(400);
-        res.body.should.be.a("object");
-        res.body.should.have.property("type").eql("failure");
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Key and data length do not match.");
+        });
     });
 });
 
