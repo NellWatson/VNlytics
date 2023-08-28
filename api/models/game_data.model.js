@@ -708,6 +708,10 @@ export const endGame = async (gameId, updatedObj, increment = false) => {
         if (doc === null) {
             return { type: "failure", message: gameId + " could not be found in our records." };
         };
+
+        if (doc.end_date != undefined) {
+            return { type: "failure", message: gameId + " is already marked as ended." };
+        };
         
         if (updatedObj.hasOwnProperty("sessions")) {
             const error = updateSessions(doc, updatedObj, increment);

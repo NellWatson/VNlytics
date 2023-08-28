@@ -258,6 +258,11 @@ export const updateGameDataBatch = async (req, res) => {
                 req.params._gameId = results[body.type].data._id;
                 results._id = results[body.type].data._id;
             };
+        } else {
+            results[body.type] = {
+                type: "failure",
+                message: "This type isn't supported for batch processing."
+            };
         };
     };
 
@@ -355,7 +360,7 @@ export const updateGamePlayData = async (req, res) => {
 };
 
 export const endGameData = async (req, res) => {
-    const validatedObj = helper.validateBody(CONSTANT.endGameDataFields, req.body, ["play_time", "ending", "sessions", "sessions_length"]);
+    const validatedObj = helper.validateBody(CONSTANT.endGameDataFields, req.body, false, ["play_time", "ending", "sessions", "sessions_length"]);
 
     if ("extra" in validatedObj) {
         return res.status(400).json({

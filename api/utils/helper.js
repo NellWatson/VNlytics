@@ -11,7 +11,7 @@ const helperFunctions = {
         };
 
         if (missingRequiredKeys.length != 0) {
-            _temp["missing_required"] = extraKeys;
+            _temp["missing_required"] = missingRequiredKeys;
             return _temp;
         };
 

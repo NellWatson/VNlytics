@@ -220,7 +220,46 @@ describe("Game Instances (that should all return 200):", () => {
 });
 
 describe("Game Instances (that should all return 400):", () => {
+    it("Test by giving random string as Project ID", async () => {
+        const res = await chai.request(app).post("/v1/RandomString");
+
+        res.should.have.status(400);
+        res.body.should.be.a("object");
+        res.body.should.have.property("type").eql("failure");
+        res.body.should.have.property("message").eql("The provided Project ID does not exist in our database.");
+    });
+
+    it("Test by giving random string as game ID", async () => {
+        const res = await chai.request(app).post("/v1/TestGame/64de0199639e9a");
+
+        res.should.have.status(400);
+        res.body.should.be.a("object");
+        res.body.should.have.property("type").eql("failure");
+        res.body.should.have.property("message").eql("Please provide a valid Game ID.");
+    });
+
+    it("Try to delete an already deleted Game Insatnce", async () => {
+        const res = await chai.request(app)
+            .delete("/v1/TestGame/" + gameIds[1]);
+
+            delete gameIds[1];
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Game Instance with this ID was not found.");
+    });
+
     describe("Tests for / endpoint", () => {
+        it("Try to add first Game Instance without any data", async () => {
+            const res = await chai.request(app)
+                .post("/v1/TestGame");
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Following keys are missing from the request: platform,display_size");
+        });
+
         it("Try to add first Game Instance without a required parameter", async () => {
             const data = {
                 "platform": "Windows"
@@ -271,6 +310,16 @@ describe("Game Instances (that should all return 400):", () => {
     });
 
     describe("Tests for /:gameId endpoint", () => {
+        it("Try to update the Game Instance without providing any data", async () => {
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0]);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Please send data to be updated with your request.");
+        });
+
         it("Try to update the Game Instance with a wrong value type session", async () => {
             const data = {
                 "sessions": "4",
@@ -412,6 +461,252 @@ describe("Game Instances (that should all return 400):", () => {
             res.body.should.be.a("object");
             res.body.should.have.property("type").eql("failure");
             res.body.should.have.property("message").eql("Key and data length do not match.");
+        });
+    });
+
+    describe("Tests for /:gameId/relationship endpoint", () => {
+        it("Try to update the Game Instance without giving key property in relationship data", async () => {
+            const data = {
+                "data": 1234
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/relationship")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Please provide a key for this update with your request.");
+        });
+
+        it("Try to update the Game Instance without giving data property in relationship data", async () => {
+            const data = {
+                "key": 1234
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/relationship")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Please provide data for this update with your request.");
+        });
+
+        it("Try to update the Game Instance by giving non string for key in relationship data", async () => {
+            const data = {
+                "key": 1234,
+                "data": "12"
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/relationship")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Relationship key can only be a string.");
+        });
+
+        it("Try to update the Game Instance by giving non number for data in relationship data", async () => {
+            const data = {
+                "key": "first_chara",
+                "data": "12"
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/relationship")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Relationship value can only be a number.");
+        });
+
+        it("Try to update the Game Instance by giving multiple values for key but lesser values data in relationship data", async () => {
+            const data = {
+                "key": ["first_chara", "second_chara"],
+                "data": 12
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/relationship")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Key and data length do not match.");
+        });
+
+        it("Try to update the Game Instance by giving multiple values for key but more values data in relationship data", async () => {
+            const data = {
+                "key": ["first_chara", "second_chara"],
+                "data": [12, 12, 12]
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/relationship")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Key and data length do not match.");
+        });
+    });
+
+    describe("Tests for /:gameId/play endpoint", () => {
+        it("Try to update the Game Instance without giving key property in play data", async () => {
+            const data = {
+                "data": 1234
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/play")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Please provide a key for this update with your request.");
+        });
+
+        it("Try to update the Game Instance without giving data property in play data", async () => {
+            const data = {
+                "key": 1234
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/play")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Please provide data for this update with your request.");
+        });
+
+        it("Try to update the Game Instance by giving non string for key in play data", async () => {
+            const data = {
+                "key": 1234,
+                "data": "12"
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/play")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Play key can only be a string.");
+        });
+
+        it("Try to update the Game Instance with multiple key values and less data values in play data", async () => {
+            const data = {
+                "key": ["first_play_field", "second_play_field"],
+                "data": 1234
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/play")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Key and data length do not match.");
+        });
+    });
+
+    describe("Tests for /:gameId/batch endpoint", () => {
+        it("Try to update the Game Instance with non array value", async () => {
+            const data = {
+                "type": "self",
+                "data": {
+                    "sessions": 5,
+                    "sessions_length": [1222, 465, 48464, 556, 7862]
+                }
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/batch")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Invalid batch data.");
+        });
+
+        it("Try to update the Game Instance with type that are not supported by batch", async () => {
+            const data = [
+                {
+                    "type": "end",
+                    "data": {
+                        "sessions": 6,
+                        "play_time": 66000,
+                        "sessions_length": [1222, 465, 48464, 556, 7862, 8542],
+                        "ending": "Happy ending",
+                        "end_data": {
+                            "end_score": 45000
+                        }
+                    }
+                }
+            ];
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/batch")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.end.should.be.a("object");
+            res.body.end.should.have.property("type").eql("failure");
+            res.body.end.should.have.property("message").eql("This type isn't supported for batch processing.");
+        });
+    });
+
+    describe("Tests for /:gameId/end endpoint", () => {
+        it("Try to end the Game Instance without providing all the required values", async () => {
+            const data = {
+                "sessions": 6,
+                "play_time": 66000,
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/end")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Required keys are missing from the request: ending,sessions_length");
+        });
+
+        it("Try to end the Game Instance that is already marked as finished", async () => {
+            const data = {
+                "sessions": 6,
+                "play_time": 66000,
+                "sessions_length": [1222, 465, 48464, 556, 7862, 8542],
+                "ending": "Happy ending",
+                "end_data": {
+                    "end_score": 45000
+                }
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/end")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").contains(" is already marked as ended.");
         });
     });
 });
