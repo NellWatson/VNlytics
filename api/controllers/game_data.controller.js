@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 // Load the models
 import ProjectsData from "../models/projects.model.js";
-import { addGameId, byId, deleteData, endGame, updateChoiceData, updateGameFields, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
+import { addGameId, byId, deleteData, endGame, replaceChoiceData, replacePlayData, replaceRelationshipData, updateChoiceData, updateGameFields, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
 
 // Load helper function
 import helper from "../utils/helper.js";
@@ -289,6 +289,42 @@ export const updateGameDataBatch = async (req, res) => {
 
     } else {
         res.status(210).json(results);
+    };
+};
+
+export const replaceGameRelationshipData = async (req, res) => {
+    const data = await replaceRelationshipData(req.params._gameId, req.body);
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
+};
+
+export const replaceGameChoiceData = async (req, res) => {
+    const data = await replaceChoiceData(req.params._gameId, req.body);
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
+    };
+};
+
+export const replaceGamePlayData = async (req, res) => {
+    const data = await replacePlayData(req.params._gameId, req.body);
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if ( data.type === "success" ) {
+        res.status(200).json(data);
     };
 };
 
