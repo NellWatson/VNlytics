@@ -144,12 +144,12 @@ describe("Game Instances (that should all return 200):", () => {
             "key": ["second_play_key", "third_play_key"],
             "data": [
                 {
-                "first_data_key": 1,
-                "second_data_key": "#fff"
+                    "first_data_key": 1,
+                    "second_data_key": "#fff"
                 },
                 {
-                "first_data_key": ["FIRST"],
-                "second_data_key": "This is fourth"
+                    "first_data_key": ["FIRST"],
+                    "second_data_key": "This is fourth"
                 }
             ]
         };
@@ -447,6 +447,22 @@ describe("Game Instances (that should all return 400):", () => {
             res.body.should.have.property("message").eql("Choice text can only be a string.");
         });
 
+        it("Try to update the Game Instance with string for key that only has digits", async () => {
+            const data = {
+                "key": "1234",
+                "data": "Third Option"
+            };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/choice")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Choice key can only be a string.");
+        })
+
         it("Try to update the Game Instance with multiple key values and less data values in choice data", async () => {
             const data = {
                 "key": ["second_choice", "third_choice"],
@@ -633,6 +649,46 @@ describe("Game Instances (that should all return 400):", () => {
                     "sessions_length": [1222, 465, 48464, 556, 7862]
                 }
             };
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/batch")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Invalid batch data.");
+        });
+
+        it("Try to update the Game Instance without giving type property in the request", async () => {
+            const data = [
+                {
+                    "key": "fourth_choice",
+                    "data": "Fourth Choice: Option 4"
+                }
+            ];
+
+            const res = await chai.request(app)
+                .patch("/v1/TestGame/" + gameIds[0] + "/batch")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body._missing.should.be.a("object");
+            res.body._missing.should.have.property("type").eql("failure");
+            res.body._missing.should.have.property("message").eql("Type property needs to be provided with each request.");
+        });
+
+        it("Try to update the Game Instance with array that contains non-object values", async () => {
+            const data = [
+                {
+                "type": "self",
+                "data": {
+                    "sessions": 5,
+                    "sessions_length": [1222, 465, 48464, 556, 7862]
+                    }
+                },
+                "random string"
+            ];
 
             const res = await chai.request(app)
                 .patch("/v1/TestGame/" + gameIds[0] + "/batch")

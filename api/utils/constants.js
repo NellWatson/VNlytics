@@ -33,6 +33,7 @@ export default {
         "relationship_data": ["object"],
         "choice_data": ["object"],
         "play_data": ["object"],
+        "increment": ["boolean"]
     },
     allowedUpdateMethods: ["self", "play", "relationship", "choice"],
     minProjectIdLength: 8,

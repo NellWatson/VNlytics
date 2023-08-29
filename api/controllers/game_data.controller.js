@@ -154,6 +154,13 @@ export const updateGameDataBatch = async (req, res) => {
         });
     };
 
+    if (!req.body.every(i => typeof i === "object")) {
+        return res.status(400).json({
+            type: "failure",
+            message: "Invalid batch data."
+        });
+    };
+
     const results = {};
     
     for (const i in req.body) {
@@ -258,11 +265,16 @@ export const updateGameDataBatch = async (req, res) => {
                 req.params._gameId = results[body.type].data._id;
                 results._id = results[body.type].data._id;
             };
-        } else {
+        } else if (body.type != undefined) {
             results[body.type] = {
                 type: "failure",
                 message: "This type isn't supported for batch processing."
             };
+        } else {
+            results["_missing"] = {
+                type: "failure",
+                message: "Type property needs to be provided with each request."
+            }
         };
     };
 

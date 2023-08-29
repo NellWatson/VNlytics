@@ -145,7 +145,7 @@ const choiceDataFunction = (choiceData, updatedChoiceDataKey, updatedChoiceData)
             return { type: "failure", message: "Key and data length do not match." };
         };
 
-        if (!updatedChoiceDataKey.every(i => typeof i === "string")) {
+        if (!updatedChoiceDataKey.every(i => typeof i === "string" || Object.is(Number(i), NaN))) {
             return { type: "failure", message: "Choice keys can only be strings." };
         };
 
@@ -158,7 +158,7 @@ const choiceDataFunction = (choiceData, updatedChoiceDataKey, updatedChoiceData)
         };
 
     } else {
-        if (typeof updatedChoiceDataKey != "string") {
+        if (typeof updatedChoiceDataKey != "string" || !Object.is(Number(updatedChoiceDataKey), NaN)) {
             return { type: "failure", message: "Choice key can only be a string." };
         };
 
