@@ -8,7 +8,7 @@ chai.use(chaiHttp);
 
 const project_ids = {};
 
-describe("Project:", () => {
+describe("Project (that should all return 200):", () => {
     before(async () => {
         const res = await chai.request(app)
             .delete("/v1")
@@ -105,5 +105,43 @@ describe("Project:", () => {
 
         res.should.have.status(200);
         res.body.should.have.property("data").eql(2);
+    });
+});
+
+describe("Project (that should all return 400):", () => {
+    it("Try to add a project without the header", async () => {
+        const project = {
+            "project_id": "TestGameFail",
+            "title": "Test",
+            "developer": "Test",
+            "engine": "Ren'Py"
+        };
+
+        const res = await chai.request(app)
+            .post("/v1")
+            .send(project);
+
+        res.should.have.status(400);
+        res.body.should.be.a("object");
+        res.body.should.have.property("type").eql("failure");
+        res.body.should.have.property("message").eql("Contact admin for the correct auth key.");
+    });
+
+    it("Try to add a project without all the required properties", async () => {
+        const project = {
+            "project_id": "TestGameFail",
+            "title": "Test",
+            "developer": "Test"
+        };
+
+        const res = await chai.request(app)
+            .post("/v1")
+            .set("Create-Project-Auth", process.env.CREATE_NEW_PROJECT_KEY)
+            .send(project);
+
+        res.should.have.status(400);
+        res.body.should.be.a("object");
+        res.body.should.have.property("type").eql("failure");
+        res.body.should.have.property("message").eql("Following keys are missing from the request: engine");
     });
 });

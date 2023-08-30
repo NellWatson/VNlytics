@@ -166,11 +166,19 @@ export const updateGameDataBatch = async (req, res) => {
     for (const i in req.body) {
         const body = req.body[i];
 
-        if (body.type === "self") {
+        if (!["put", "patch"].includes(body.method)) {
+            results[body.path] = {
+                type: "failure",
+                message: "Unsupported method type."
+            };
+            continue;
+        };
+
+        if (body.path === "/") {
             const validatedObj = helper.validateBody(CONSTANT.gameDataUpdatableFields, body.data);
         
             if ("extra" in validatedObj) {
-                results[body.type] = {
+                results[body.path] = {
                     type: "failure",
                     message: `Extra data is provided with the request: ${validatedObj.extra}`
                 };
@@ -178,7 +186,7 @@ export const updateGameDataBatch = async (req, res) => {
             };
         
             if ("error" in validatedObj) {
-                results[body.type] = {
+                results[body.path] = {
                     type: "failure",
                     message: `Following keys have invalid value types: ${validatedObj.error}`
                 };
@@ -186,95 +194,120 @@ export const updateGameDataBatch = async (req, res) => {
             };
         
             const increment = body.increment || false;
-            results[body.type] = await updateGameFields(req.params._gameId, validatedObj, increment);
+            results[body.path] = await updateGameFields(req.params._gameId, validatedObj, increment);
 
-            if (results[body.type].data != undefined && results[body.type].data._id != undefined) {
-                req.params._gameId = results[body.type].data._id;
-                results._id = results[body.type].data._id;
-            };
-
-        } else if (body.type === "relationship") {
-            if (body.key === undefined || body.key === "") {
-                results[body.type] = {
-                    type: "failure",
-                    message: "Please provide a key for this update with your request."
+        } else if (body.path === "/relationship") {
+            if (body.method === "patch") {
+                if (body.key === undefined || body.key === "") {
+                    results[body.path] = {
+                        type: "failure",
+                        message: "Please provide a key for this update with your request."
+                    };
+                    continue;
                 };
-                continue;
-            };
-        
-            if (body.data === undefined || body.data === "") {
-                results[body.type] = {
-                    type: "failure",
-                    message: "Please provide data for this update with your request."
+            
+                if (body.data === undefined || body.data === "") {
+                    results[body.path] = {
+                        type: "failure",
+                        message: "Please provide data for this update with your request."
+                    };
+                    continue;
                 };
-                continue;
-            };
-        
-            const increment = body.increment || false;
-            results[body.type] = await updateRelationshipData(req.params._gameId, body.key, body.data, increment);
+            
+                const increment = body.increment || false;
+                results[body.path] = await updateRelationshipData(req.params._gameId, body.key, body.data, increment);
 
-            if (results[body.type].data != undefined && results[body.type].data._id != undefined) {
-                req.params._gameId = results[body.type].data._id;
-                results._id = results[body.type].data._id;
-            };
-
-        } else if (body.type === "choice") {
-            if (body.key === undefined || body.key === "") {
-                results[body.type] = {
-                    type: "failure",
-                    message: "Please provide a key for this update with your request."
+            } else if (body.method === "put") {
+                if (body.key != undefined) {
+                    results[body.path] = {
+                        type: "failure",
+                        message: "Please don't provide `key` property with a PUT request."
+                    };
+                    continue;
                 };
-                continue;
-            };
-        
-            if (body.data === undefined || body.data === "") {
-                results[body.type] = {
-                    type: "failure",
-                    message: "Please provide data for this update with your request."
-                };
-                continue;
-            };
-        
-            results[body.type] = await updateChoiceData(req.params._gameId, body.key, body.data);
-
-            if (results[body.type].data != undefined && results[body.type].data._id != undefined) {
-                req.params._gameId = results[body.type].data._id;
-                results._id = results[body.type].data._id;
+                
+                results[body.path] = await replaceChoiceData(req.params._gameId, body.data);
             };
 
-        } else if (body.type === "play") {
-            if (body.key === undefined || body.key === "") {
-                results[body.type] = {
-                    type: "failure",
-                    message: "Please provide a key for this update with your request."
+        } else if (body.path === "/choice") {
+            if (body.method === "patch") {
+                if (body.key === undefined || body.key === "") {
+                    results[body.path] = {
+                        type: "failure",
+                        message: "Please provide a key for this update with your request."
+                    };
+                    continue;
                 };
-                continue;
-            };
-        
-            if (body.data === undefined || body.data === "") {
-                results[body.type] = {
-                    type: "failure",
-                    message: "Please provide data for this update with your request."
+            
+                if (body.data === undefined || body.data === "") {
+                    results[body.path] = {
+                        type: "failure",
+                        message: "Please provide data for this update with your request."
+                    };
+                    continue;
                 };
-                continue;
-            };
-        
-            results[body.type] = await updatePlayData(req.params._gameId, body.key, body.data);
+            
+                results[body.path] = await updateChoiceData(req.params._gameId, body.key, body.data);
 
-            if (results[body.type].data != undefined && results[body.type].data._id != undefined) {
-                req.params._gameId = results[body.type].data._id;
-                results._id = results[body.type].data._id;
+            } else if (body.method === "put") {
+                if (body.key != undefined) {
+                    results[body.path] = {
+                        type: "failure",
+                        message: "Please don't provide `key` property with a PUT request."
+                    };
+                    continue;
+                };
+
+                results[body.path] = await replaceChoiceData(req.params._gameId, body.data);
             };
-        } else if (body.type != undefined) {
-            results[body.type] = {
+
+        } else if (body.path === "/play") {
+            if (body.method === "patch") {
+                if (body.key === undefined || body.key === "") {
+                    results[body.path] = {
+                        type: "failure",
+                        message: "Please provide a key for this update with your request."
+                    };
+                    continue;
+                };
+            
+                if (body.data === undefined || body.data === "") {
+                    results[body.path] = {
+                        type: "failure",
+                        message: "Please provide data for this update with your request."
+                    };
+                    continue;
+                };
+            
+                results[body.path] = await updatePlayData(req.params._gameId, body.key, body.data);
+
+            } else if (body.method === "put") {
+                if (body.key != undefined) {
+                    results[body.path] = {
+                        type: "failure",
+                        message: "Please don't provide `key` property with a PUT request."
+                    };
+                    continue;
+                };
+                
+                results[body.path] = await replacePlayData(req.params._gameId, body.data);
+            };
+
+        } else if (body.path != undefined) {
+            results[body.path] = {
                 type: "failure",
                 message: "This type isn't supported for batch processing."
             };
         } else {
             results["_missing"] = {
                 type: "failure",
-                message: "Type property needs to be provided with each request."
+                message: "Path property needs to be provided with each request."
             }
+        };
+
+        if (body.path != undefined && results[body.path].data != undefined && results[body.path].data._id != undefined) {
+            req.params._gameId = results[body.path].data._id;
+            results._id = results[body.path].data._id;
         };
     };
 

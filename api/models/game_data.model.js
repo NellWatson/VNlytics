@@ -145,7 +145,7 @@ const choiceDataFunction = (choiceData, updatedChoiceDataKey, updatedChoiceData)
             return { type: "failure", message: "Key and data length do not match." };
         };
 
-        if (!updatedChoiceDataKey.every(i => typeof i === "string" || Object.is(Number(i), NaN))) {
+        if (!updatedChoiceDataKey.every(i => typeof i === "string" && Object.is(Number(i), NaN))) {
             return { type: "failure", message: "Choice keys can only be strings." };
         };
 
@@ -564,7 +564,7 @@ export const replaceRelationshipData = async (gameId, relationshipData) => {
             return { type: "failure", message: gameId + " could not be found in our records." };
         };
 
-        if (!Object.keys(relationshipData).every(i => typeof i === "string" || Object.is(Number(i), NaN))) {
+        if (!Object.keys(relationshipData).every(i => typeof i === "string" && Object.is(Number(i), NaN))) {
             return { type: "failure", message: "Relationship keys can only be strings." };
         };
 
@@ -609,7 +609,7 @@ export const replaceChoiceData = async (gameId, choiceData) => {
             return { type: "failure", message: gameId + " could not be found in our records." };
         };
 
-        if (!Object.keys(choiceData).every(i => typeof i === "string" || Object.is(Number(i), NaN))) {
+        if (!Object.keys(choiceData).every(i => typeof i === "string" && Object.is(Number(i), NaN))) {
             return { type: "failure", message: "Choice keys can only be strings." };
         };
 
@@ -654,7 +654,7 @@ export const replacePlayData = async (gameId, playData) => {
             return { type: "failure", message: gameId + " could not be found in our records." };
         };
 
-        if (!Object.keys(playData).every(i => typeof i === "string" || Object.is(Number(i), NaN))) {
+        if (!Object.keys(playData).every(i => typeof i === "string" && Object.is(Number(i), NaN))) {
             return { type: "failure", message: "Play keys can only be strings." };
         };
 

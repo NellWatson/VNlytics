@@ -151,17 +151,22 @@ v1.patch("/:_gameId", gameDataController.updateGameInstanceData);
 v1.delete("/:_gameId", gameDataController.deleteGameInstance);
 
 /**
- * @api {PATCH} /:_gameId/batch
+ * @api {POST} /:_gameId/batch
  * @define Handle multiple API request in a batch. Requests are processed one after the other and any request can
  *         fail but it will not cause the entire batch request to fail.
  * @bodyType json
- * @body {Array<Object>} - An array containing objects. Each object must have a `type` property which can only be
- *                         one of the following, `self`, `relationship`, `choice`, `play`. After the `type` property,
- *                         other properties related to that endpoint must be given.
- * @success Returns an object composed of the same number of responses as the given objects, with provided `type` as
- *          the property name and a response object as it;s value. If a new Game Instance was created, there will be
+ * @body {Array<Object>} - An array containing objects. Each object must have a
+ *                          * `method` property which one only be one of the following: `put`, `patch`.
+ *                          * `path` property which can only be one of the following: `/`, `/relationship`, `/choice`,
+ *                         `/play`.
+ *                         If the method is `put`, `key` shouldn't be provided. All data must be self contained in
+ *                         the `data` property. Check the associated `put` endpoints for how the data should be given.
+ *                         If the method is `post`, `key` and `data` both should be provided. Check the associated `put`
+ *                         endpoints for how the data should be given.
+ * @success Returns an object composed of the same number of responses as the given objects, with provided `path` as
+ *          the property name and a response object as it's value. If a new Game Instance was created, there will be
  *          an additional property called `_id` which will have the new Game Instance ID. All future updates must be
- *          performed on this.
+ *          performed on this `_id`.
  *          In case of partial success (where one or more but less than all requests fail), a status code of 201 is
  *          returned.
  * @successExample Success-Response
@@ -172,10 +177,10 @@ v1.delete("/:_gameId", gameDataController.deleteGameInstance);
  *              message: "{_gameId} Game Instance has been updated."
  *          }
  *      ]
- * @failure Returns an object composed of the same number of responses as the given objects, with provided `type` as
- *          the property name and a response object as it;s value. If a new Game Instance was created, there will be
+ * @failure Returns an object composed of the same number of responses as the given objects, with provided `path` as
+ *          the property name and a response object as it's value. If a new Game Instance was created, there will be
  *          an additional property called `_id` which will have the new Game Instance ID. All future updates must be
- *          performed on this.
+ *          performed on this `_id`.
  *          In case of partial success (where one or more but less than all requests fail), a status code of 201 is
  *          returned.
  * @failureExample Failure-Response
@@ -193,7 +198,7 @@ v1.delete("/:_gameId", gameDataController.deleteGameInstance);
  *          message: "Internal Server Error. Contact administrator."
  *      }
  */
-v1.patch("/:_gameId/batch", gameDataController.updateGameDataBatch);
+v1.post("/:_gameId/batch", gameDataController.updateGameDataBatch);
 
 /**
  * @api {PATCH} /:_gameId/relationship
@@ -397,7 +402,7 @@ v1.patch("/:_gameId/end", gameDataController.endGameData);
  *          message: "Internal Server Error. Contact administrator."
  *      }
  */
-v1.put("/:_gameId/relationship", gameDataController.replaceGameChoiceData);
+v1.put("/:_gameId/relationship", gameDataController.replaceGameRelationshipData);
 
 /**
  * @api {PUT} /:_gameId/choice
@@ -475,7 +480,7 @@ v1.put("/:_gameId/choice", gameDataController.replaceGameChoiceData);
  *          message: "Internal Server Error. Contact administrator."
  *      }
  */
-v1.put("/:_gameId/play", gameDataController.replaceGameRelationshipData);
+v1.put("/:_gameId/play", gameDataController.replaceGamePlayData);
 
 v1.post("/:_gameId/form", function(req, res) {
     req.body = helper.sanitise(req.body);

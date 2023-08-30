@@ -163,30 +163,52 @@ describe("Game Instances (that should all return 200):", () => {
         res.body.should.have.property("type").eql("success");
     });
 
-    it("Update the Game Instance using batch API request", async () => {
+    it("Update the Game Instance data using batch API request", async () => {
         const data = [
             {
-                "type": "self",
+                "method": "patch",
+                "path": "/",
                 "data": {
                     "sessions": 5,
                     "sessions_length": [1222, 465, 48464, 556, 7862]
                 }
             },
             {
-                "type": "choice",
+                "method": "patch",
+                "path": "/choice",
                 "key": "fourth_choice",
                 "data": "Fourth Choice: Option 4"
             }
         ];
 
         const res = await chai.request(app)
-            .patch("/v1/TestGame/" + gameIds[0] + "/batch")
+            .post("/v1/TestGame/" + gameIds[0] + "/batch")
             .send(data);
 
         res.should.have.status(200);
         res.body.should.be.a("object");
-        res.body.self.should.have.property("type").eql("success");
-        res.body.choice.should.have.property("type").eql("success");
+        res.body["/"].should.have.property("type").eql("success");
+        res.body["/choice"].should.have.property("type").eql("success");
+    });
+
+    it("Replace the Game Instance data using batch API request", async () => {
+        const data = [
+            {
+                "method": "put",
+                "path": "/choice",
+                "data": {
+                    "fifth_choice": "Fifth Choice: Option 4"
+                }
+            }
+        ];
+
+        const res = await chai.request(app)
+            .post("/v1/TestGame/" + gameIds[0] + "/batch")
+            .send(data);
+
+        res.should.have.status(200);
+        res.body.should.be.a("object");
+        res.body["/choice"].should.have.property("type").eql("success");
     });
 
     it("End the Game Instance", async () => {
@@ -461,7 +483,7 @@ describe("Game Instances (that should all return 400):", () => {
             res.body.should.be.a("object");
             res.body.should.have.property("type").eql("failure");
             res.body.should.have.property("message").eql("Choice key can only be a string.");
-        })
+        });
 
         it("Try to update the Game Instance with multiple key values and less data values in choice data", async () => {
             const data = {
@@ -477,6 +499,21 @@ describe("Game Instances (that should all return 400):", () => {
             res.body.should.be.a("object");
             res.body.should.have.property("type").eql("failure");
             res.body.should.have.property("message").eql("Key and data length do not match.");
+        });
+
+        it("Try to replace the Game Instance with invalid choice data", async () => {
+            const data = {
+                "1234": "Third Option"
+            };
+
+            const res = await chai.request(app)
+                .put("/v1/TestGame/" + gameIds[0] + "/choice")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Choice keys can only be strings.");
         });
     });
 
@@ -574,6 +611,21 @@ describe("Game Instances (that should all return 400):", () => {
             res.body.should.have.property("type").eql("failure");
             res.body.should.have.property("message").eql("Key and data length do not match.");
         });
+
+        it("Try to replace the Game Instance with invalid relationship data", async () => {
+            const data = {
+                "first_chara": "Third Option"
+            };
+
+            const res = await chai.request(app)
+                .put("/v1/TestGame/" + gameIds[0] + "/relationship")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Relationship values can only be numbers.");
+        });
     });
 
     describe("Tests for /:gameId/play endpoint", () => {
@@ -638,12 +690,29 @@ describe("Game Instances (that should all return 400):", () => {
             res.body.should.have.property("type").eql("failure");
             res.body.should.have.property("message").eql("Key and data length do not match.");
         });
+
+        it("Try to replace the Game Instance with invalid choice data", async () => {
+            const data = {
+                1: {
+                    "as": 1234
+                }
+            };
+
+            const res = await chai.request(app)
+                .put("/v1/TestGame/" + gameIds[0] + "/play")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Play keys can only be strings.");
+        });
     });
 
     describe("Tests for /:gameId/batch endpoint", () => {
         it("Try to update the Game Instance with non array value", async () => {
             const data = {
-                "type": "self",
+                "path": "/",
                 "data": {
                     "sessions": 5,
                     "sessions_length": [1222, 465, 48464, 556, 7862]
@@ -651,7 +720,7 @@ describe("Game Instances (that should all return 400):", () => {
             };
 
             const res = await chai.request(app)
-                .patch("/v1/TestGame/" + gameIds[0] + "/batch")
+                .post("/v1/TestGame/" + gameIds[0] + "/batch")
                 .send(data);
 
             res.should.have.status(400);
@@ -660,38 +729,59 @@ describe("Game Instances (that should all return 400):", () => {
             res.body.should.have.property("message").eql("Invalid batch data.");
         });
 
-        it("Try to update the Game Instance without giving type property in the request", async () => {
+        it("Try to update the Game Instance without giving method property in the request", async () => {
             const data = [
                 {
+                    "path": "/choice",
                     "key": "fourth_choice",
                     "data": "Fourth Choice: Option 4"
                 }
             ];
 
             const res = await chai.request(app)
-                .patch("/v1/TestGame/" + gameIds[0] + "/batch")
+                .post("/v1/TestGame/" + gameIds[0] + "/batch")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body["/choice"].should.be.a("object");
+            res.body["/choice"].should.have.property("type").eql("failure");
+            res.body["/choice"].should.have.property("message").eql("Unsupported method type.");
+        });
+
+        it("Try to update the Game Instance without giving path property in the request", async () => {
+            const data = [
+                {
+                    "method": "patch",
+                    "key": "fourth_choice",
+                    "data": "Fourth Choice: Option 4"
+                }
+            ];
+
+            const res = await chai.request(app)
+                .post("/v1/TestGame/" + gameIds[0] + "/batch")
                 .send(data);
 
             res.should.have.status(400);
             res.body._missing.should.be.a("object");
             res.body._missing.should.have.property("type").eql("failure");
-            res.body._missing.should.have.property("message").eql("Type property needs to be provided with each request.");
+            res.body._missing.should.have.property("message").eql("Path property needs to be provided with each request.");
         });
 
         it("Try to update the Game Instance with array that contains non-object values", async () => {
             const data = [
                 {
-                "type": "self",
-                "data": {
-                    "sessions": 5,
-                    "sessions_length": [1222, 465, 48464, 556, 7862]
-                    }
-                },
-                "random string"
+                    "method": "patch",
+                    "path": "/",
+                    "data": {
+                        "sessions": 5,
+                        "sessions_length": [1222, 465, 48464, 556, 7862]
+                        }
+                    },
+                    "random string"
             ];
 
             const res = await chai.request(app)
-                .patch("/v1/TestGame/" + gameIds[0] + "/batch")
+                .post("/v1/TestGame/" + gameIds[0] + "/batch")
                 .send(data);
 
             res.should.have.status(400);
@@ -700,10 +790,11 @@ describe("Game Instances (that should all return 400):", () => {
             res.body.should.have.property("message").eql("Invalid batch data.");
         });
 
-        it("Try to update the Game Instance with type that are not supported by batch", async () => {
+        it("Try to update the Game Instance with path that are not supported by batch", async () => {
             const data = [
                 {
-                    "type": "end",
+                    "method": "patch",
+                    "path": "/end",
                     "data": {
                         "sessions": 6,
                         "play_time": 66000,
@@ -717,13 +808,33 @@ describe("Game Instances (that should all return 400):", () => {
             ];
 
             const res = await chai.request(app)
-                .patch("/v1/TestGame/" + gameIds[0] + "/batch")
+                .post("/v1/TestGame/" + gameIds[0] + "/batch")
                 .send(data);
 
             res.should.have.status(400);
-            res.body.end.should.be.a("object");
-            res.body.end.should.have.property("type").eql("failure");
-            res.body.end.should.have.property("message").eql("This type isn't supported for batch processing.");
+            res.body["/end"].should.be.a("object");
+            res.body["/end"].should.have.property("type").eql("failure");
+            res.body["/end"].should.have.property("message").eql("This type isn't supported for batch processing.");
+        });
+
+        it("Try to replace the Game Instance data but give a key property in the batch request", async () => {
+            const data = [
+                {
+                    "method": "put",
+                    "path": "/choice",
+                    "key": "fourth_choice",
+                    "data": "Fourth Choice: Option 4"
+                }
+            ];
+
+            const res = await chai.request(app)
+                .post("/v1/TestGame/" + gameIds[0] + "/batch")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body["/choice"].should.be.a("object");
+            res.body["/choice"].should.have.property("type").eql("failure");
+            res.body["/choice"].should.have.property("message").eql("Please don't provide `key` property with a PUT request.");
         });
     });
 
