@@ -16,7 +16,7 @@ export const invalidProjectId = (req, res) => {
 };
 
 export const createNewProject = async (req, res) => {
-    const validatedObj = helper.validateBody(CONSTANT.projectDataInitFields, req.body, true);
+    const validatedObj = helper.validateBody(CONSTANT.projectDataInitFields, req.body);
 
     if ("extra" in validatedObj) {
         return res.status(400).json({
@@ -72,10 +72,10 @@ export const updateProject = async (req, res) => {
         });
     };
 
-    if (helper.isEmpty(validatedObj)) {
+    if ("extra" in validatedObj) {
         return res.status(400).json({
             type: "failure",
-            message: "Please send data to be updated with your request."
+            message: `Extra data is provided with the request: ${validatedObj.extra}`
         });
     };
 

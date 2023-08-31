@@ -1,49 +1,65 @@
 // This function strips out all the unwanted entries from postData
 const helperFunctions = {
-    validateBody: (allowedKeys, postData, matchhAll = false, requiredKeys = []) => {
+    validateBody: (allowedKeys, postData) => {
         let _temp = {};
         const extraKeys = Object.keys(postData).filter(x => Object.keys(allowedKeys).includes(x) === false);
-        const missingRequiredKeys = requiredKeys.filter(x => Object.keys(postData).includes(x) === false);
 
         if (extraKeys.length != 0) {
             _temp["extra"] = extraKeys;
             return _temp;
         };
 
-        if (missingRequiredKeys.length != 0) {
-            _temp["missing_required"] = missingRequiredKeys;
-            return _temp;
-        };
-
         for (const key in allowedKeys) {
             if (key in postData) {
-                for (let j = 0; j < allowedKeys[key].length; j++) {
-                    if (allowedKeys[key][j] === "array" && Array.isArray(postData[key]) === true) {
+                if (Array.isArray(allowedKeys[key].type)) {
+                    const types = allowedKeys[key].type;
+
+                    for (let j = 0; j < types.length; j++) {
+                        if (types[j] === "array" && Array.isArray(postData[key]) === true) {
+                            _temp[key] = postData[key];
+                            break;
+                            
+                        } else if (typeof postData[key] === types[j]) {
+                            _temp[key] = postData[key];
+                            break;
+    
+                        } else {
+                            // If the following key type has multiple types, only log an error when we have checked all types.
+                            if (j + 1 < types.length) {
+                                continue;
+                            };
+
+                            if ("error" in _temp) {
+                                if (!_temp["error"].includes(key)) {
+                                    _temp["error"].push(key);
+                                };
+
+                            } else {
+                                _temp["error"] = [key];
+                            };
+                        };
+                    };
+
+                } else {
+                    if (typeof postData[key] === allowedKeys[key].type) {
                         _temp[key] = postData[key];
-                        break;
-                        
-                    } else if (typeof postData[key] === allowedKeys[key][j]) {
-                        _temp[key] = postData[key];
-                        break;
 
                     } else {
-                        // If the following key type has multiple types, only log an error when we have checked all types.
-                        if (j + 1 < allowedKeys[key].length) {
-                            continue;
-                        };
-
                         if ("error" in _temp) {
                             if (!_temp["error"].includes(key)) {
                                 _temp["error"].push(key);
                             };
+
                         } else {
                             _temp["error"] = [key];
                         };
                     };
                 };
+
             } else {
-                if (!matchhAll) {
-                    continue;
+                // If the following key type is not required, continue
+                if (allowedKeys[key].required === undefined) {
+                    continue
                 };
 
                 if ("missing" in _temp) {
@@ -53,12 +69,13 @@ const helperFunctions = {
                 };
             };
         };
+
         return _temp;
     },
 
-    contains: (arr1, arr2) => {
-        return arr2.every(x => {
-            return arr1.includes(x)
+    contains: (parentArray, childArray) => {
+        return childArray.every(x => {
+            return parentArray.includes(x)
         });
     },
 

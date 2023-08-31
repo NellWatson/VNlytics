@@ -32,7 +32,6 @@ v1.get("/", invalidProjectId);
  * @body {string} title - Title of the project.
  * @body {string} developer - Developer of the project.
  * @body {string} engine - Engine used to develop the project.
- * @body {string} [developer] - Developer of the project.
  * @body {string} [description] - Description of the project.
  * @body {string} [image_url] - URL to the project image.
  * @body {string} [publisher] - Publisher of the project.

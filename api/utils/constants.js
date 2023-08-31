@@ -1,39 +1,110 @@
 export default {
     projectDataInitFields: {
-        "project_id": ["string"],
-        "title": ["string"],
-        "developer": ["string"],
-        "engine": ["string"]
+        "project_id": {
+            type: "string",
+            required: true
+        },
+        "title": {
+            type: "string",
+            required: true
+        },
+        "developer": {
+            type: "string",
+            required: true
+        },
+        "engine": {
+            type: "string",
+            required: true
+        },
+        "description": {
+            type: "string"
+        },
+        "image_url": {
+            type: "string"
+        },
+        "publisher": {
+            type: "string"
+        }
     },
     projectUpdatableFields: {
-        "title": ["string"],
-        "developer": ["string"],
-        "description": ["string"],
-        "image_url": ["string"],
-        "publisher": ["string"],
-        "engine": ["string"]
+        "title": {
+            type: "string"  
+        },
+        "developer": {
+            type: "string"
+        },
+        "description": {
+            type: "string"
+        },
+        "image_url": {
+            type: "string"
+        },
+        "publisher": {
+            type: "string"
+        },
+        "engine": {
+            type: "string"
+        }
     },
     gameDataInitFields: {
-        "platform": ["string"],
-        "display_size": ["string"]
+        "platform": {
+            type: "string",
+            required: true
+        },
+        "display_size": {
+            type: "string",
+            required: true
+        }
     },
     gameDataUpdatableFields: {
-        "play_time": ["number"],
-        "multiple_ids": ["boolean"],
-        "sessions": ["number"],
-        "sessions_length": ["number", "array"],
-        "increment": ["boolean"]
+        "play_time": {
+            type: "number"
+        },
+        "multiple_ids": {
+            type: "boolean"
+        },
+        "sessions": {
+            type: "number"
+        },
+        "sessions_length": {
+            type: ["number", "array"]
+        },
+        "increment": {
+            type: "boolean"
+        }
     },
     endGameDataFields: {
-        "play_time": ["number"],
-        "ending": ["string"],
-        "sessions": ["number"],
-        "sessions_length": ["number", "array"],
-        "end_data": ["object"],
-        "relationship_data": ["object"],
-        "choice_data": ["object"],
-        "play_data": ["object"],
-        "increment": ["boolean"]
+        "play_time": {
+            type: "number",
+            required: true
+        },
+        "ending": {
+            type: "string",
+            required: true
+        },
+        "sessions": {
+            type: "number",
+            required: true
+        },
+        "sessions_length": {
+            type: ["number", "array"],
+            required: true
+        },
+        "end_data": {
+            type: "object"
+        },
+        "relationship_data": {
+            type: "object"
+        },
+        "choice_data": {
+            type: "object"
+        },
+        "play_data": {
+            type: "object"
+        },
+        "increment": {
+            type: "boolean"
+        }
     },
     allowedUpdateMethods: ["self", "play", "relationship", "choice"],
     minProjectIdLength: 8,

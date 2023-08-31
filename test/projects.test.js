@@ -144,4 +144,24 @@ describe("Project (that should all return 400):", () => {
         res.body.should.have.property("type").eql("failure");
         res.body.should.have.property("message").eql("Following keys are missing from the request: engine");
     });
+
+    it("Try to add a project with useless properties", async () => {
+        const project = {
+            "project_id": "TestGameFail",
+            "title": "Test",
+            "developer": "Test",
+            "engine": "Ren'Py",
+            "bar": "foo"
+        };
+
+        const res = await chai.request(app)
+            .post("/v1")
+            .set("Create-Project-Auth", process.env.CREATE_NEW_PROJECT_KEY)
+            .send(project);
+
+        res.should.have.status(400);
+        res.body.should.be.a("object");
+        res.body.should.have.property("type").eql("failure");
+        res.body.should.have.property("message").eql("Extra data is provided with the request: bar");
+    });
 });

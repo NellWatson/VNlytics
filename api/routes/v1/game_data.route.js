@@ -482,7 +482,7 @@ v1.put("/:_gameId/choice", gameDataController.replaceGameChoiceData);
  */
 v1.put("/:_gameId/play", gameDataController.replaceGamePlayData);
 
-v1.post("/:_gameId/form", function(req, res) {
+v1.put("/:_gameId/form", function(req, res) {
     req.body = helper.sanitise(req.body);
 
     var _gameId = req.params._gameId;

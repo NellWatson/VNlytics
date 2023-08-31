@@ -52,7 +52,7 @@ export const checkIfPathValid = async(req, res, next) => {
 };
 
 export const addNewGameId = async (req, res) => {
-    const validatedObj = helper.validateBody(CONSTANT.gameDataInitFields, req.body, true);
+    const validatedObj = helper.validateBody(CONSTANT.gameDataInitFields, req.body);
 
     if ("extra" in validatedObj) {
         return res.status(400).json({
@@ -441,7 +441,7 @@ export const updateGamePlayData = async (req, res) => {
 };
 
 export const endGameData = async (req, res) => {
-    const validatedObj = helper.validateBody(CONSTANT.endGameDataFields, req.body, false, ["play_time", "ending", "sessions", "sessions_length"]);
+    const validatedObj = helper.validateBody(CONSTANT.endGameDataFields, req.body);
 
     if ("extra" in validatedObj) {
         return res.status(400).json({
@@ -450,10 +450,10 @@ export const endGameData = async (req, res) => {
         });
     };
 
-    if ("missing_required" in validatedObj) {
+    if ("missing" in validatedObj) {
         return res.status(400).json({
             type: "failure",
-            message: `Required keys are missing from the request: ${validatedObj.missing_required}`
+            message: `Required keys are missing from the request: ${validatedObj.missing}`
         });
     };
 

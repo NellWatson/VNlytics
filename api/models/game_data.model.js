@@ -75,9 +75,6 @@ const gameDataSchema = mongoose.Schema({
             type: Number,
             min: 0
         },
-        email: {
-            type: String
-        },
         extra_questions: {
             type: mongoose.Schema.Types.Mixed
         }
