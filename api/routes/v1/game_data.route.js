@@ -158,7 +158,7 @@ v1.delete("/:_gameId", gameDataController.deleteGameInstance);
  * @body {Array<Object>} - An array containing objects. Each object must have a
  *                          * `method` property which one only be one of the following: `put`, `patch`.
  *                          * `path` property which can only be one of the following: `/`, `/relationship`, `/choice`,
- *                         `/play`.
+ *                         `/play`, `/form`.
  *                         If the method is `put`, `key` shouldn't be provided. All data must be self contained in
  *                         the `data` property. Check the associated `put` endpoints for how the data should be given.
  *                         If the method is `post`, `key` and `data` both should be provided. Check the associated `put`
@@ -482,43 +482,36 @@ v1.put("/:_gameId/choice", gameDataController.replaceGameChoiceData);
  */
 v1.put("/:_gameId/play", gameDataController.replaceGamePlayData);
 
-v1.put("/:_gameId/form", function(req, res) {
-    req.body = helper.sanitise(req.body);
-
-    var _gameId = req.params._gameId;
-
-    helper.documentExists( GameData, { _id: _gameId, project_id: req._projectId } )
-        .then(function(c) {
-            if ( c == 0 ) {
-                return res.send("The provided Game Id does not exist in our database");
-            } else {
-
-                GameData.addFormData( _gameId, req.body, function(err, doc) {
-
-                    if (err) {
-                        if (err.name === "MongoError" && err.code === 11000) {
-                            res.send("This session has already been finished!");
-                        } else if (err.name === "MongoError" && err.code === 9) {
-                            res.send("Please provide valid data!");
-                        } else {
-                            throw err
-                        };
-                    }
-
-                    if (doc) {
-                        res.json("Thank you for your feedback.");
-                    }
-                })
-            }
-        })
-
-        .catch(function(err) {
-            if (err.name === "CastError" && err.kind === "ObjectId") {
-                res.send("Please use a valid ID.");
-            } else {
-                throw err;
-            }
-        });
-});
+/**
+ * @api {PUT} /:_gameId/form
+ * @define Submit the form data of the Game Instance.
+ * @bodyType json
+ * @body {number} overall - The overall score of the game. Should be a positive number.
+ * @body {number} ease - The ease score of the game. Should be a positive number.
+ * @body {number} gameplay - The gameplay score of the game. Should be a positive number.
+ * @body {number} story - The story score of the game. Should be a positive number.
+ * @body {number} graphics - The graphics score of the game. Should be a positive number.
+ * @body {number} music - The music score of the game. Should be a positive number.
+ * @body {object} [extra_questions] - Contains extra questions the creator feels the need to ask.
+ * @successExample Success-Response
+ *      HTTP/1.1 200
+ *      {
+ *          type: "success",
+ *          message: "{_gameId} Game Instance form has been submitted."
+ *      }
+ * @failureExample Failure-Response
+ *      HTTP/1.1 400
+ *      {
+ *          type: "failure",
+ *          message: <Can be different depending upon failure>
+ *      }
+ * @errorExample Error-Response
+ *      HTTP/1.1 500
+ *      {
+ *          type: "error",
+ *          message: "Internal Server Error. Contact administrator."
+ *      }
+ */
+v1.put("/:_gameId/form", gameDataController.addFormData);
 
 export default v1;

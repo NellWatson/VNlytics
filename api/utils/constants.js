@@ -106,7 +106,33 @@ export default {
             type: "boolean"
         }
     },
-    allowedUpdateMethods: ["self", "play", "relationship", "choice"],
-    minProjectIdLength: 8,
-    maxProjectIdLength: 24
+    formDataFields: {
+        "overall": {
+            type: "number",
+            required: true
+        },
+        "ease": {
+            type: "number",
+            required: true
+        },
+        "gameplay": {
+            type: "number",
+            required: true
+        },
+        "story": {
+            type: "number",
+            required: true
+        },
+        "graphics": {
+            type: "number",
+            required: true
+        },
+        "music": {
+            type: "number",
+            required: true
+        },
+        "extra_questions": {
+            type: "object"
+        }
+    }
 };

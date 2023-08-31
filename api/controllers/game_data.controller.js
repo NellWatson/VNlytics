@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 // Load the models
 import ProjectsData from "../models/projects.model.js";
-import { addGameId, byId, deleteData, endGame, replaceChoiceData, replacePlayData, replaceRelationshipData, updateChoiceData, updateGameFields, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
+import { addGameId, byId, deleteData, endGame, replaceChoiceData, replacePlayData, replaceRelationshipData, submitFormData, updateChoiceData, updateGameFields, updateRelationshipData, updatePlayData } from "../models/game_data.model.js";
 
 // Load helper function
 import helper from "../utils/helper.js";
@@ -117,7 +117,7 @@ export const updateGameInstanceData = async (req, res) => {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };
@@ -129,19 +129,19 @@ export const deleteGameInstance = async (req, res) => {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };
 
 export const getById = async (req, res) => {
-    const data = await byId({ _id: req.params._gameId })
+    const data = await byId(req.params._gameId)
 
     if (data.type === "error") {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };
@@ -293,11 +293,41 @@ export const updateGameDataBatch = async (req, res) => {
                 results[body.path] = await replacePlayData(req.params._gameId, body.data);
             };
 
+        } else if (body.path === "/form") {
+            const validatedObj = helper.validateBody(CONSTANT.formDataFields, body.data);
+        
+            if ("extra" in validatedObj) {
+                results[body.path] = {
+                    type: "failure",
+                    message: `Extra data is provided with the request: ${validatedObj.extra}`
+                };
+                continue;
+            };
+        
+            if ("missing" in validatedObj) {
+                results[body.path] = {
+                    type: "failure",
+                    message: `Required keys are missing from the request: ${validatedObj.missing}`
+                };
+                continue;
+            };
+        
+            if ("error" in validatedObj) {
+                results[body.path] = {
+                    type: "failure",
+                    message: `Following keys have invalid value types: ${validatedObj.error}`
+                };
+                continue;
+            };
+        
+            results[body.path] = await submitFormData(req.params._gameId, validatedObj);
+
         } else if (body.path != undefined) {
             results[body.path] = {
                 type: "failure",
                 message: "This type isn't supported for batch processing."
             };
+
         } else {
             results["_missing"] = {
                 type: "failure",
@@ -332,7 +362,7 @@ export const replaceGameRelationshipData = async (req, res) => {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };
@@ -344,7 +374,7 @@ export const replaceGameChoiceData = async (req, res) => {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };
@@ -356,7 +386,7 @@ export const replaceGamePlayData = async (req, res) => {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };
@@ -383,7 +413,7 @@ export const updateGameRelationshipData = async (req, res) => {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };
@@ -409,7 +439,7 @@ export const updateGameChoiceData = async (req, res) => {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };
@@ -435,7 +465,42 @@ export const updateGamePlayData = async (req, res) => {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
+        res.status(200).json(data);
+    };
+};
+
+export const addFormData = async (req, res) => {
+    const validatedObj = helper.validateBody(CONSTANT.formDataFields, req.body);
+
+    if ("extra" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Extra data is provided with the request: ${validatedObj.extra}`
+        });
+    };
+
+    if ("missing" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Required keys are missing from the request: ${validatedObj.missing}`
+        });
+    };
+
+    if ("error" in validatedObj) {
+        return res.status(400).json({
+            type: "failure",
+            message: `Following keys have invalid value types: ${validatedObj.error}`
+        });
+    };
+
+    const data = await submitFormData(req.params._gameId, validatedObj);
+
+    if (data.type === "error") {
+        res.status(500).json(data);
+    } else if (data.type === "failure") {
+        res.status(400).json(data);
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };
@@ -473,7 +538,7 @@ export const endGameData = async (req, res) => {
         res.status(500).json(data);
     } else if (data.type === "failure") {
         res.status(400).json(data);
-    } else if ( data.type === "success" ) {
+    } else if (data.type === "success") {
         res.status(200).json(data);
     };
 };

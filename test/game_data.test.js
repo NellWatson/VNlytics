@@ -211,6 +211,28 @@ describe("Game Instances (that should all return 200):", () => {
         res.body["/choice"].should.have.property("type").eql("success");
     });
 
+    it("Submit the form", async () => {
+        const data = {
+            "overall": 1,
+            "ease": 1,
+            "gameplay": 1,
+            "story": 1,
+            "graphics": 1,
+            "music": 1,
+            "extra_questions": {
+                "random": "value"
+            }
+        };
+
+        const res = await chai.request(app)
+            .put("/v1/TestGame/" + gameIds[0] + "/form")
+            .send(data);
+        
+        res.should.have.status(200);
+        res.body.should.be.a("object");
+        res.body.should.have.property("type").eql("success");
+    });
+
     it("End the Game Instance", async () => {
         const data = {
             "sessions": 6,
@@ -229,6 +251,25 @@ describe("Game Instances (that should all return 200):", () => {
         res.should.have.status(200);
         res.body.should.be.a("object");
         res.body.should.have.property("type").eql("success");
+    });
+
+    it("Update the Game Instance that has been finished", async () => {
+        const data = {
+            "key": "third_choice",
+            "data": "Third Choice: Option 4"
+        };
+
+        const res = await chai.request(app)
+            .patch("/v1/TestGame/" + gameIds[0] + "/choice")
+            .send(data);
+
+        res.should.have.status(200);
+        res.body.should.be.a("object");
+        res.body.should.have.property("type").eql("success");
+        res.body.should.have.property("data");
+        res.body.data.should.have.property("project_id").eql("TestGame");
+
+        gameIds.push(res.body.data._id);
     });
 
     it("Delete the second Game Instance", async () => {
@@ -835,6 +876,48 @@ describe("Game Instances (that should all return 400):", () => {
             res.body["/choice"].should.be.a("object");
             res.body["/choice"].should.have.property("type").eql("failure");
             res.body["/choice"].should.have.property("message").eql("Please don't provide `key` property with a PUT request.");
+        });
+    });
+
+    describe("Tests for /:gameId/form endpoint", () => {
+        it("Try to submit the form without providing all the properties", async () => {
+            const data = {
+                "overall": 1,
+                "ease": 1,
+                "gameplay": 1,
+                "story": 1,
+                "graphics": 1
+            };
+
+            const res = await chai.request(app)
+                .put("/v1/TestGame/" + gameIds[0] + "/form")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Required keys are missing from the request: music");
+        });
+
+        it("Try to submit the form by providing wrong value type of the properties", async () => {
+            const data = {
+                "overall": "1",
+                "ease": "1",
+                "gameplay": 1,
+                "story": 1,
+                "graphics": 1,
+                "music": 1,
+                "extra_questions": "asd"
+            };
+
+            const res = await chai.request(app)
+                .put("/v1/TestGame/" + gameIds[0] + "/form")
+                .send(data);
+
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("type").eql("failure");
+            res.body.should.have.property("message").eql("Following keys have invalid value types: overall,ease,extra_questions");
         });
     });
 

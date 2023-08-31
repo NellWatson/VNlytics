@@ -71,7 +71,7 @@ const gameDataSchema = mongoose.Schema({
             type: Number,
             min: 0
         },
-        sound: {
+        music: {
             type: Number,
             min: 0
         },
@@ -269,6 +269,29 @@ const updateSessionsLengthArray = (doc, updatedObj, increment) => {
         } else {
             doc["sessions_length"] = [updatedObj["sessions_length"]];
         };
+    };
+};
+
+const createNewDocument = async (doc, gameId, funcName) => {
+    try {
+        const newDocObj = doc.toObject();
+        newDocObj.multiple_ids = true;
+    
+        delete newDocObj._id;
+        delete newDocObj.end_date;
+        delete newDocObj.ending;
+        delete newDocObj.end_data;
+    
+        if (newDocObj.parent_doc === undefined) {
+            newDocObj.parent_doc = gameId;
+        };
+    
+        const newDoc = await GameData.create(newDocObj);
+        return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+
+    } catch (err) {
+        logger.error("GameModel:" + funcName + ": " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
 
@@ -528,20 +551,7 @@ export const updateGameFields = async (gameId, updatedObj, increment = false) =>
         };
 
         if (doc.end_date != undefined) {
-            const newDocObj = doc.toObject();
-            newDocObj.multiple_ids = true;
-
-            delete newDocObj._id;
-            delete newDocObj.end_date;
-            delete newDocObj.ending;
-            delete newDocObj.end_data;
-
-            if (newDocObj.parent_doc === undefined) {
-                newDocObj.parent_doc = gameId;
-            };
-
-            const newDoc = await GameData.create(newDocObj);
-            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+            return createNewDocument(doc, gameId, "updateGameFields");
         };
         
         await doc.save();
@@ -573,27 +583,14 @@ export const replaceRelationshipData = async (gameId, relationshipData) => {
         doc.markModified("relationship_data");
 
         if (doc.end_date != undefined) {
-            const newDocObj = doc.toObject();
-            newDocObj.multiple_ids = true;
-
-            delete newDocObj._id;
-            delete newDocObj.end_date;
-            delete newDocObj.ending;
-            delete newDocObj.end_data;
-
-            if (newDocObj.parent_doc === undefined) {
-                newDocObj.parent_doc = gameId;
-            };
-
-            const newDoc = await GameData.create(newDocObj);
-            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+            return createNewDocument(doc, gameId, "replaceRelationshipData");
         };
         
         await doc.save();
         return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
-        logger.error("GameModel:updateRelationshipData: " + err.name + ": " + err.message);
+        logger.error("GameModel:replaceRelationshipData: " + err.name + ": " + err.message);
         return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
@@ -618,27 +615,14 @@ export const replaceChoiceData = async (gameId, choiceData) => {
         doc.markModified("choice_data");
 
         if (doc.end_date != undefined) {
-            const newDocObj = doc.toObject();
-            newDocObj.multiple_ids = true;
-
-            delete newDocObj._id;
-            delete newDocObj.end_date;
-            delete newDocObj.ending;
-            delete newDocObj.end_data;
-
-            if (newDocObj.parent_doc === undefined) {
-                newDocObj.parent_doc = gameId;
-            };
-
-            const newDoc = await GameData.create(newDocObj);
-            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+            return createNewDocument(doc, gameId, "replaceChoiceData");
         };
         
         await doc.save();
         return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
-        logger.error("GameModel:updateRelationshipData: " + err.name + ": " + err.message);
+        logger.error("GameModel:replaceChoiceData: " + err.name + ": " + err.message);
         return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
@@ -659,27 +643,14 @@ export const replacePlayData = async (gameId, playData) => {
         doc.markModified("play_data");
 
         if (doc.end_date != undefined) {
-            const newDocObj = doc.toObject();
-            newDocObj.multiple_ids = true;
-
-            delete newDocObj._id;
-            delete newDocObj.end_date;
-            delete newDocObj.ending;
-            delete newDocObj.end_data;
-
-            if (newDocObj.parent_doc === undefined) {
-                newDocObj.parent_doc = gameId;
-            };
-
-            const newDoc = await GameData.create(newDocObj);
-            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+            return createNewDocument(doc, gameId, "replacePlayData");
         };
         
         await doc.save();
         return { type: "success", message: doc._id + " Game Instance has been updated." };
 
     } catch (err) {
-        logger.error("GameModel:updateRelationshipData: " + err.name + ": " + err.message);
+        logger.error("GameModel:replacePlayData: " + err.name + ": " + err.message);
         return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
@@ -702,20 +673,7 @@ export const updateRelationshipData = async (gameId, updatedRelationshipDataKey,
         doc.markModified("relationship_data");
 
         if (doc.end_date != undefined) {
-            const newDocObj = doc.toObject();
-            newDocObj.multiple_ids = true;
-
-            delete newDocObj._id;
-            delete newDocObj.end_date;
-            delete newDocObj.ending;
-            delete newDocObj.end_data;
-
-            if (newDocObj.parent_doc === undefined) {
-                newDocObj.parent_doc = gameId;
-            };
-
-            const newDoc = await GameData.create(newDocObj);
-            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+            return createNewDocument(doc, gameId, "updateRelationshipData");
         };
         
         await doc.save();
@@ -745,20 +703,7 @@ export const updateChoiceData = async (gameId, updatedChoiceDataKey, updatedChoi
         doc.markModified("choice_data");
 
         if (doc.end_date != undefined) {
-            const newDocObj = doc.toObject();
-            newDocObj.multiple_ids = true;
-
-            delete newDocObj._id;
-            delete newDocObj.end_date;
-            delete newDocObj.ending;
-            delete newDocObj.end_data;
-
-            if (newDocObj.parent_doc === undefined) {
-                newDocObj.parent_doc = gameId;
-            };
-
-            const newDoc = await GameData.create(newDocObj);
-            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+            return createNewDocument(doc, gameId, "updateChoiceData");
         };
         
         await doc.save();
@@ -788,20 +733,7 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
         doc.markModified("play_data");
 
         if (doc.end_date != undefined) {
-            const newDocObj = doc.toObject();
-            newDocObj.multiple_ids = true;
-
-            delete newDocObj._id;
-            delete newDocObj.end_date;
-            delete newDocObj.ending;
-            delete newDocObj.end_data;
-
-            if (newDocObj.parent_doc === undefined) {
-                newDocObj.parent_doc = gameId;
-            };
-
-            const newDoc = await GameData.create(newDocObj);
-            return { type: "success", message: "A new game Instance was successfully created from the existing one.", data: { _id: newDoc._id, project_id: newDoc.project_id } };
+            return createNewDocument(doc, gameId, "updatePlayData");
         };
         
         await doc.save();
@@ -815,16 +747,40 @@ export const updatePlayData = async (gameId, updatedPlayDataKey, updatedPlayData
 
 export const byId = async (query) => {
     try {
-        const doc = await GameData.findOne(query);
+        const doc = await GameData.findById(gameId);
 
         if (doc === null) {
             return { type: "failure", message: query._id + " Game Instance does not exist." };
         } else {
             return { type: "success", message: query._id + " Game Instance exists." };
-        }
+        };
 
     } catch (err) {
         logger.error("GameModel:byId: " + err.name + ": " + err.message);
+        return { type: "error", message: "Internal Server Error. Contact administrator." };
+    };
+};
+
+export const submitFormData = async (gameId, updatedObj) => {
+    try {
+        const doc = await GameData.findById(gameId);
+        
+        if (doc === null) {
+            return { type: "failure", message: gameId + " could not be found in our records." };
+        };
+
+        if (!Object.keys(updatedObj).every(i => (i === "extra_questions") || (typeof updatedObj[i] === "number" && updatedObj[i] > 0))) {
+            return { type: "failure", message: "Standard form values can only be positive numbers."};
+        };
+
+        doc.filled_form = true;
+        doc.form_data = updatedObj;
+        
+        await doc.save();
+        return { type: "success", message: doc._id + " Game Instance form has been submitted." };
+
+    } catch (err) {
+        logger.error("GameModel:submitFormData: " + err.name + ": " + err.message);
         return { type: "error", message: "Internal Server Error. Contact administrator." };
     };
 };
