@@ -54,6 +54,9 @@ export default {
         "display_size": {
             type: "string",
             required: true
+        },
+        "multiple_ids": {
+            type: "boolean"
         }
     },
     gameDataUpdatableFields: {

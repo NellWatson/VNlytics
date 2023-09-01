@@ -79,7 +79,13 @@ export const addNewGameId = async (req, res) => {
     try {
         validatedObj.country = geoip.lookup(req.ip).country;
     } catch (err) {
-        validatedObj.country = "local";
+        if (process.env.NODE_ENV === "development") {
+            const sampleLocations = ["US", "IN", "UK", "MX", "JP"];
+            validatedObj.country = sampleLocations[(Math.floor(Math.random() * sampleLocations.length))];
+
+        } else {
+            validatedObj.country = "00";
+        };
     };
 
     const data = await addGameId(validatedObj);

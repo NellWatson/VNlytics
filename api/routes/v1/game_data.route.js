@@ -32,6 +32,7 @@ v1.use(gameDataController.checkIfPathValid);
  * @bodyType json
  * @body {string} platform - Platform of the gaming device.
  * @body {string} display_size - Display size of the gaming device.
+ * @body {boolean} [multiple_ids] - If multiple games have been played on the same device.
  * @successExample Success-Response
  *      HTTP/1.1 200
  *      {

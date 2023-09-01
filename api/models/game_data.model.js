@@ -880,11 +880,3 @@ export const aggregateData = (field, query, callback ) => {
 
     GameData.aggregate( pipeline, callback );
 };
-
-export const addFormData = (gameId, formObj, callback) => {
-    var query = { _id: gameId, filled_form: false };
-    var update = { $set: { "filled_form": true, "form_data": formObj } };
-    var options = { upsert: true };
-
-    GameData.findOneAndUpdate(query, update, options, callback);
-};
